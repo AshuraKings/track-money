@@ -1,15 +1,21 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
+	"track/lib"
+	"track/lib/repo"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	resp := map[string]interface{}{}
-	resp["msg"] = "Hello World"
-	jsonData, _ := json.Marshal(resp)
-	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprint(w, string(jsonData))
+	defer lib.DefaultError(w)
+	if r.Method == "GET" {
+		resp := map[string]interface{}{}
+		resp["msg"] = "Hello World"
+		roles, done := repo.AllRoles(w)
+		if !done {
+			return
+		}
+		resp["roles"] = roles
+		lib.SendJson(resp, w)
+	}
 }
