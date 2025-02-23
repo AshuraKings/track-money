@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useDarkMode } from './stores/darkmode'
 
 const darkmode = useDarkMode()
@@ -9,6 +9,10 @@ const iconBtn = computed(() => darkmode.isDark ? 'md-sunny' : 'fa-moon')
 function toDark() {
   darkmode.reverseTheme()
 }
+
+onMounted(() => {
+  document.title = 'App'
+})
 </script>
 <template>
   <div>
