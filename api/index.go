@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 	"track/lib"
 	"track/lib/repo"
@@ -17,5 +18,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		resp["roles"] = roles
 		lib.SendJson(resp, w)
+	} else {
+		panic(errors.New("method not allowed"))
 	}
 }
