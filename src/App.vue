@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useDarkMode } from './stores/darkmode'
+import NoAuthLayout from './layouts/NoAuthLayout.vue'
 
 const darkmode = useDarkMode(), msg = ref('')
 
@@ -19,7 +20,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div>
+  <NoAuthLayout title="No Auth Test">
     <h1 class="text-3xl font-bold underline text-black dark:text-gray-200">
       {{ msg }}
     </h1>
@@ -27,5 +28,5 @@ onMounted(() => {
       <v-icon :name="iconBtn" />
       To Dark
     </button>
-  </div>
+  </NoAuthLayout>
 </template>
