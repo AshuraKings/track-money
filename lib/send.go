@@ -36,6 +36,27 @@ func CloseDb(w http.ResponseWriter, db *sql.DB) {
 	}
 }
 
+func TxClose(tx *sql.Tx, w http.ResponseWriter) {
+	if tx != nil {
+		if r := recover(); r != nil {
+			w.WriteHeader(500)
+			msg := fmt.Sprint("", r)
+			log.Println(msg)
+			log.Println(string(debug.Stack()))
+			if err := tx.Rollback(); err != nil {
+				panic(err)
+			}
+			SendJson(map[string]string{"msg": msg}, w)
+		} else {
+			if err := tx.Commit(); err != nil {
+				panic(err)
+			}
+		}
+	} else {
+		DefaultError(w)
+	}
+}
+
 func DefaultError(w http.ResponseWriter) {
 	if r := recover(); r != nil {
 		w.WriteHeader(500)
@@ -52,5 +73,5 @@ func SendJson(resp any, w http.ResponseWriter) {
 		panic(err)
 	}
 	w.Header().Add("Content-Type", "application/json")
-	fmt.Fprint(w, string(jsonData))
+	w.Write(jsonData)
 }
