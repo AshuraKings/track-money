@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    network_mode: bridge
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: example
+      POSTGRES_DB: track
+      POSTGRES_USER: postgres

@@ -10,7 +10,7 @@ import (
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer lib.DefaultError(w)
 	if r.Method == "GET" {
-		resp := map[string]interface{}{}
+		resp := map[string]any{}
 		resp["msg"] = "Hello World"
 		roles, done := repo.AllRoles(w)
 		if !done {

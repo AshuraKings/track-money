@@ -115,8 +115,36 @@ func EditUser(tx *sql.Tx, user User) error {
 }
 
 func AddUser(tx *sql.Tx, user User) (uint64, error) {
-	query := "MERGE INTO users u USING(SELECT $1 nm,$2 password,$3 username) AS n ON u.username=n.username "
-	query = query + "WHEN NOT MATCHED THEN INSERT(nm,password,username) VALUES(n.nm,n.password,n.username)"
+	err := addUser(tx, user)
+	if err != nil {
+		return 0, err
+	}
+	var id uint64
+	rows, err := tx.Query("SELECT id FROM users WHERE username=$1 AND deleted_at IS NULL LIMIT 1", user.Username)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
+	if err != nil {
+		return 0, err
+	}
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			return 0, nil
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
+	}
+	return id, err
+}
+
+func addUser(tx *sql.Tx, user User) error {
+	query := "MERGE INTO users u USING(SELECT $1 nm,$2 password,$3 username,$4::bigint role_id) AS n ON u.username=n.username "
+	query = query + "WHEN NOT MATCHED THEN INSERT(nm,sandi,username,role_id) VALUES(n.nm,n.password,n.username,n.role_id)"
 	stmt, err := tx.Prepare(query)
 	defer func(stmt *sql.Stmt) {
 		if stmt != nil {
@@ -126,17 +154,13 @@ func AddUser(tx *sql.Tx, user User) (uint64, error) {
 		}
 	}(stmt)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	res, err := stmt.Exec(user.Nm, user.Password, user.Username)
+	_, err = stmt.Exec(user.Nm, user.Password, user.Username, user.RoleId)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-	return uint64(id), err
+	return nil
 }
 
 func NewUser(nm string, username string, password string, role uint64) User {
