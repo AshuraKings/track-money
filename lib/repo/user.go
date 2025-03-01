@@ -16,17 +16,17 @@ type User struct {
 }
 
 func UserByUsername(tx *sql.Tx, username string) (User, error) {
-	query := "SELECT id,nm,username,password,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL AND username=$1 LIMIT 1"
+	query := "SELECT id,nm,username,sandi,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL AND username=$1 LIMIT 1"
 	return selectQueryAUser(tx, query, username)
 }
 
 func UserById(tx *sql.Tx, id uint64) (User, error) {
-	query := "SELECT id,nm,username,password,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL AND id=$1 LIMIT 1"
+	query := "SELECT id,nm,username,sandi,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL AND id=$1 LIMIT 1"
 	return selectQueryAUser(tx, query, id)
 }
 
 func AllUsers(tx *sql.Tx) ([]User, error) {
-	query := "SELECT id,nm,username,password,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL"
+	query := "SELECT id,nm,username,sandi,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL"
 	return selectQueryUsers(tx, query)
 }
 

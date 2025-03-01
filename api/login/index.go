@@ -22,13 +22,13 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			panic(err)
 		}
 		validation(body)
-		registering(w, body)
+		login(w, body)
 	} else {
 		panic(errors.New("method not allowed"))
 	}
 }
 
-func registering(w http.ResponseWriter, body map[string]any) {
+func login(w http.ResponseWriter, body map[string]any) {
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -39,46 +39,36 @@ func registering(w http.ResponseWriter, body map[string]any) {
 	if err != nil {
 		panic(err)
 	}
+	username := body["username"].(string)
+	user, err := repo.UserByUsername(tx, username)
+	if err != nil {
+		panic(err)
+	}
 	password := body["password"].(string)
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 15)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		panic(err)
 	}
-	user := repo.NewUser(body["nm"].(string), body["username"].(string), string(bytes), 4)
-	id, err := repo.AddUser(tx, user)
-	if err != nil {
-		panic(err)
-	}
-	sessionToken, err := session.GenSessionToken(id)
+	sessionToken, err := session.GenSessionToken(user.Id)
 	if err != nil {
 		panic(err)
 	}
 	w.Header().Add("sessionToken", sessionToken)
-	refreshToken, err := session.GenRefreshToken(id)
+	refreshToken, err := session.GenRefreshToken(user.Id)
 	if err != nil {
 		panic(err)
 	}
 	w.Header().Add("refreshToken", refreshToken)
-	lib.SendJson(map[string]any{"msg": "Success", "id": id}, w)
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
 func validation(body map[string]any) {
 	keys := mapsutils.KeysOfMap(body)
-	if !arrayutils.Contains(keys, "nm") {
-		panic("nm is required")
-	}
 	if !arrayutils.Contains(keys, "username") {
 		panic("username is required")
 	}
 	if !arrayutils.Contains(keys, "password") {
 		panic("password is required")
-	}
-	nm := body["nm"].(string)
-	if nm == "" {
-		panic("nm is required")
-	}
-	if len(nm) < 5 {
-		panic("nm length is min 5")
 	}
 	username := body["username"].(string)
 	if username == "" {
