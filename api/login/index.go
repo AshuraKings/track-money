@@ -49,16 +49,7 @@ func login(w http.ResponseWriter, body map[string]any) {
 	if err != nil {
 		panic(err)
 	}
-	sessionToken, err := session.GenSessionToken(user.Id)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Add("sessionToken", sessionToken)
-	refreshToken, err := session.GenRefreshToken(user.Id)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Add("refreshToken", refreshToken)
+	session.PutSessionToResponse(w, user.Id)
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 

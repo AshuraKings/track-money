@@ -49,17 +49,8 @@ func registering(w http.ResponseWriter, body map[string]any) {
 	if err != nil {
 		panic(err)
 	}
-	sessionToken, err := session.GenSessionToken(id)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Add("sessionToken", sessionToken)
-	refreshToken, err := session.GenRefreshToken(id)
-	if err != nil {
-		panic(err)
-	}
-	w.Header().Add("refreshToken", refreshToken)
-	lib.SendJson(map[string]any{"msg": "Success", "id": id}, w)
+	session.PutSessionToResponse(w, id)
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
 func validation(body map[string]any) {
