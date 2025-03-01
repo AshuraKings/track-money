@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"log"
 	"time"
 )
 
@@ -13,6 +14,11 @@ type User struct {
 	RoleId    uint64
 	CreatedAt time.Time
 	UpdatedAt *time.Time
+}
+
+type UserWithRole struct {
+	User User
+	Role Role
 }
 
 func UserByUsername(tx *sql.Tx, username string) (User, error) {
@@ -28,6 +34,41 @@ func UserById(tx *sql.Tx, id uint64) (User, error) {
 func AllUsers(tx *sql.Tx) ([]User, error) {
 	query := "SELECT id,nm,username,sandi,role_id,created_at,updated_at FROM users WHERE deleted_at IS NULL"
 	return selectQueryUsers(tx, query)
+}
+
+func UserWithRoleByUserId(tx *sql.Tx, id uint64) (UserWithRole, error) {
+	query := "SELECT u.id,u.nm,u.username,u.sandi,u.role_id,u.created_at,u.updated_at,r.id r_id,r.nm r_nm,r.created_at r_created_at,"
+	query += "r.updated_at r_updated_at FROM users u LEFT JOIN roles r ON r.id=u.role_id AND r.deleted_at IS NULL WHERE u.deleted_at IS NULL AND u.id=$1 LIMIT 1"
+	log.Printf("Query UserWithRoleByUserId : \"%s\"", query)
+	return selectQueryAUserWithRole(tx, query, id)
+}
+
+func selectQueryAUserWithRole(tx *sql.Tx, query string, args ...any) (UserWithRole, error) {
+	userWithRole := UserWithRole{}
+	rows, err := tx.Query(query, args...)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
+	if err != nil {
+		return UserWithRole{}, err
+	}
+	if rows.Next() {
+		user, role := User{}, Role{}
+		err = rows.Scan(&user.Id, &user.Nm, &user.Username, &user.Password, &user.RoleId, &user.CreatedAt, &user.UpdatedAt, &role.Id, &role.Nm, &role.CreatedAt, &role.UpdatedAt)
+		if err != nil {
+			return UserWithRole{}, err
+		}
+		userWithRole.Role = role
+		userWithRole.User = user
+	}
+	if err = rows.Err(); err != nil {
+		return UserWithRole{}, err
+	}
+	return userWithRole, nil
 }
 
 func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {

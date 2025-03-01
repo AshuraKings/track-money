@@ -1,10 +1,8 @@
 package repo
 
 import (
-	"net/http"
+	"database/sql"
 	"time"
-	"track/lib"
-	"track/lib/db"
 )
 
 type Role struct {
@@ -14,34 +12,63 @@ type Role struct {
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
-func AllRoles(w http.ResponseWriter) ([]Role, bool) {
-	var roles []Role
-	clear := true
-	db, err := db.DbConn()
-	defer func() {
-		clear = false
-		lib.CloseDb(w, db)
-	}()
+func AllRoles(tx *sql.Tx) ([]Role, error) {
+	query := "SELECT id,nm,created_at,updated_at FROM roles WHERE deleted_at IS NULL"
+	return selectQueryRoles(tx, query)
+}
+
+func RoleById(tx *sql.Tx, id uint64) (Role, error) {
+	query := "SELECT id,nm,created_at,updated_at FROM roles WHERE deleted_at IS NULL AND id=$1 LIMIT 1"
+	return selectQueryARole(tx, query, id)
+}
+
+func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
+	role := Role{}
+	rows, err := tx.Query(query, args...)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
 	if err != nil {
-		panic(err)
+		return Role{}, err
 	}
-	rows, err := db.Query("SELECT id,nm,created_at,updated_at FROM roles WHERE deleted_at IS NULL")
-	defer func() {
-		clear = false
-		lib.RowsClose(w, rows)
-	}()
+	if rows.Next() {
+		role := Role{}
+		if err = rows.Scan(&role.Id, &role.Nm, &role.CreatedAt, &role.UpdatedAt); err != nil {
+			return Role{}, err
+		}
+	}
+	if err = rows.Err(); err != nil {
+		return Role{}, err
+	}
+	return role, nil
+}
+
+func selectQueryRoles(tx *sql.Tx, query string, args ...any) ([]Role, error) {
+	var roles []Role
+	rows, err := tx.Query(query, args...)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	for rows.Next() {
 		role := Role{}
 		if err = rows.Scan(&role.Id, &role.Nm, &role.CreatedAt, &role.UpdatedAt); err != nil {
-			panic(err)
+			return nil, err
 		}
 		roles = append(roles, role)
 	}
 	if err = rows.Err(); err != nil {
-		panic(err)
+		return nil, err
 	}
-	return roles, clear
+	return roles, nil
 }
