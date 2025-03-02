@@ -1,32 +1,13 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useDarkMode } from './stores/darkmode'
-import NoAuthLayout from './layouts/NoAuthLayout.vue'
+import { useRouter } from './stores/router'
+import Login from './pages/Login.vue'
+import Register from './pages/Register.vue'
+import Loading from 'vue-loading-overlay'
 
-const darkmode = useDarkMode(), msg = ref('')
-
-const iconBtn = computed(() => darkmode.isDark ? 'md-sunny' : 'fa-moon')
-
-function toDark() {
-  darkmode.reverseTheme()
-}
-
-onMounted(() => {
-  document.title = 'App'
-  fetch('/api', { method: 'GET' })
-    .then(r => r.json())
-    .then(r => msg.value = r.msg)
-    .catch(console.log)
-})
+const router = useRouter()
 </script>
 <template>
-  <NoAuthLayout title="No Auth Test">
-    <h1 class="text-3xl font-bold underline text-black dark:text-gray-200">
-      {{ msg }}
-    </h1>
-    <button @click="toDark" class="text-black dark:text-gray-200">
-      <v-icon :name="iconBtn" />
-      To Dark
-    </button>
-  </NoAuthLayout>
+  <Loading :can-cancel="false" is-full-page v-model:active="router.loading" />
+  <Register v-if="router.path === '/register'" />
+  <Login v-if="router.path === '/'" />
 </template>

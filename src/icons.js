@@ -1,6 +1,6 @@
 import { addIcons } from "oh-vue-icons"
-import { FaMoon, MdSunny } from 'oh-vue-icons/icons'
+import { FaMoon, IoCheckmarkSharp, MdCancelOutlined, MdSunny } from 'oh-vue-icons/icons'
 
 addIcons(
-    FaMoon, MdSunny
+    FaMoon, IoCheckmarkSharp, MdCancelOutlined, MdSunny
 )
