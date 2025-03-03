@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"time"
 )
@@ -197,9 +198,16 @@ func addUser(tx *sql.Tx, user User) error {
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(user.Nm, user.Password, user.Username, user.RoleId)
+	res, err := stmt.Exec(user.Nm, user.Password, user.Username, user.RoleId)
 	if err != nil {
 		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New("duplicate username")
 	}
 	return nil
 }
