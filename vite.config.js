@@ -20,8 +20,9 @@ export default defineConfig({
           }
           if (id.endsWith('.vue')) {
             const dirs = id.split('/')
+            const parent = dirs[dirs.length - 2]
             const s = dirs[dirs.length - 1].replace('.vue', '')
-            return s
+            return parent + '/' + s
           }
         }
       }
