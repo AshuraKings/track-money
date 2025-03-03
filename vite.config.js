@@ -8,8 +8,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: id => {
+          console.log(id)
           if (id.includes('node_modules')) {
-            console.log(id)
             for (const s of ['pinia', 'oh-vue-icons', 'flowbite', 'apexcharts', 'datatables', 'vue-loading-overlay']) if (id.includes('/node_modules/' + s)) {
               return s
             }
@@ -17,6 +17,11 @@ export default defineConfig({
               return s
             }
             return 'vendor'
+          }
+          if (id.endsWith('.vue')) {
+            const dirs = id.split('/')
+            const s = dirs[dirs.length - 1].replace('.vue', '')
+            return s
           }
         }
       }
