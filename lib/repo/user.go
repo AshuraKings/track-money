@@ -73,6 +73,7 @@ func selectQueryAUserWithRole(tx *sql.Tx, query string, args ...any) (UserWithRo
 }
 
 func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {
+	log.Printf("Query \"%s\"", query)
 	user := User{Id: 0}
 	rows, err := tx.Query(query, args...)
 	defer func(rows *sql.Rows) {
@@ -97,6 +98,7 @@ func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {
 }
 
 func selectQueryUsers(tx *sql.Tx, query string, args ...any) ([]User, error) {
+	log.Printf("Query \"%s\"", query)
 	var users []User
 	rows, err := tx.Query(query, args...)
 	defer func(rows *sql.Rows) {
@@ -187,6 +189,7 @@ func AddUser(tx *sql.Tx, user User) (uint64, error) {
 func addUser(tx *sql.Tx, user User) error {
 	query := "MERGE INTO users u USING(SELECT $1 nm,$2 password,$3 username,$4::bigint role_id) AS n ON u.username=n.username "
 	query = query + "WHEN NOT MATCHED THEN INSERT(nm,sandi,username,role_id) VALUES(n.nm,n.password,n.username,n.role_id)"
+	log.Printf("Query \"%s\"", query)
 	stmt, err := tx.Prepare(query)
 	defer func(stmt *sql.Stmt) {
 		if stmt != nil {
@@ -206,7 +209,8 @@ func addUser(tx *sql.Tx, user User) error {
 	if err != nil {
 		return err
 	}
-	if count == 0 {
+	log.Printf("Rows affected %d", count)
+	if count != 0 {
 		return errors.New("duplicate username")
 	}
 	return nil

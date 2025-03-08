@@ -5,6 +5,7 @@ import { useRouter } from '../stores/router'
 import NoAuthInput from '../components/NoAuthInput.vue'
 import { register } from '../api/noauth'
 import MessageModal from '../components/MessageModal.vue'
+import Link from '../components/Link.vue'
 
 const router = useRouter(), nm = ref(''), username = ref(''), password = ref(''), rePass = ref(''), msg = ref(''), openMsg = ref(false)
 
@@ -44,10 +45,10 @@ function registering() {
                 :disabled="router.loading" v-model="rePass" />
             <div class="flex items-end">
                 <div class="flex items-center h-5">
-                    <button @click="() => router.setPath('/')" type="button" :disabled="router.loading"
+                    <Link href="/" :disabled="router.loading"
                         class="w-full px-4 py-2 text-base font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:ring-green-300 sm:w-auto dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
-                        To Login
-                    </button>
+                    To Login
+                    </Link>
                 </div>
             </div>
             <button @click="registering" type="button" :disabled="submitDisabled"

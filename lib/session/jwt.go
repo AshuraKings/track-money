@@ -24,7 +24,7 @@ func ValidationRole(w http.ResponseWriter, r *http.Request, roles []string) bool
 	if err != nil {
 		panic(err)
 	}
-	if r.RequestURI == "/api/logout" {
+	if r.RequestURI != "/api/logout" {
 		PutSessionToResponse(w, id)
 	}
 	db, err := db.DbConn()

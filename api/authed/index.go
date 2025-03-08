@@ -7,12 +7,14 @@ import (
 	"track/lib/db"
 	"track/lib/repo"
 	"track/lib/session"
+
+	arrayutils "github.com/AchmadRifai/array-utils"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer lib.DefaultError(w)
 	if r.Method == "GET" {
-		if !session.ValidationRole(w, r, []string{"admin", "viewer-out", "viewer", "fin"}) {
+		if !session.ValidationRole(w, r, []string{}) {
 			return
 		}
 		claim := session.ParseToken(r)
@@ -34,6 +36,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			panic(err)
 		}
+		menus, err := repo.MenuByRoleId(tx, user.Role.Id)
+		if err != nil {
+			panic(err)
+		}
 		lib.SendJson(map[string]any{
 			"role": map[string]any{
 				"id":        user.Role.Id,
@@ -41,6 +47,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 				"createdAt": user.Role.CreatedAt,
 				"updatedAt": user.Role.UpdatedAt,
 			},
+			"menus": arrayutils.Map(menus, menuToMap),
 			"user": map[string]any{
 				"id":        user.User.Id,
 				"nm":        user.User.Nm,
@@ -53,5 +60,18 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}, w)
 	} else {
 		panic("method not allowed")
+	}
+}
+
+func menuToMap(v repo.Menu, _ int) map[string]any {
+	return map[string]any{
+		"createdAt": v.CreatedAt,
+		"icon":      v.Icon,
+		"id":        v.Id,
+		"label":     v.Label,
+		"link":      v.Link,
+		"updatedAt": v.UpdatedAt,
+		"parent":    v.ParentId,
+		"subs":      arrayutils.Map(v.SubMenus, menuToMap),
 	}
 }
