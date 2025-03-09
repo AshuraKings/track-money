@@ -56,33 +56,33 @@ func registering(w http.ResponseWriter, body map[string]any) {
 func validation(body map[string]any) {
 	keys := mapsutils.KeysOfMap(body)
 	if !arrayutils.Contains(keys, "nm") {
-		panic("nm is required")
+		panic("bad: nm is required")
 	}
 	if !arrayutils.Contains(keys, "username") {
-		panic("username is required")
+		panic("bad: username is required")
 	}
 	if !arrayutils.Contains(keys, "password") {
-		panic("password is required")
+		panic("bad: password is required")
 	}
 	nm := body["nm"].(string)
 	if nm == "" {
-		panic("nm is required")
+		panic("bad: nm is required")
 	}
 	if len(nm) < 5 {
-		panic("nm length is min 5")
+		panic("bad: nm length is min 5")
 	}
 	username := body["username"].(string)
 	if username == "" {
-		panic("username is required")
+		panic("bad: username is required")
 	}
 	if len(username) < 5 {
-		panic("username length is min 5")
+		panic("bad: username length is min 5")
 	}
 	password := body["password"].(string)
 	if password == "" {
-		panic("password is required")
+		panic("bad: password is required")
 	}
 	if len(password) < 8 {
-		panic("password length is min 8")
+		panic("bad: password length is min 8")
 	}
 }

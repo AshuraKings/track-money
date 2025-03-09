@@ -14,7 +14,13 @@ function out() {
         if (status >= 200 && status < 300) {
             router.setToken('', '')
             router.setPath('/')
-        } else console.log(body)
+        } else {
+            console.log(body)
+            if (body.msg === 'Token is expired') {
+                router.setToken('', '')
+                router.setPath('/')
+            }
+        }
         router.reverseLoading()
     }).catch(e => {
         console.log(e)

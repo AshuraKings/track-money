@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useSidebar } from '../stores/sidebar'
 import Icon from '/vite.svg'
+import Link from './Link.vue'
 
 const sidebar = useSidebar()
 
@@ -25,9 +26,9 @@ const toggleSidebarMobile = computed(() => 'w-6 h-6 ' + (sidebar.open ? 'hidden'
                     clip-rule="evenodd"></path>
             </svg>
         </button>
-        <a href="#" class="flex ml-2 md:mr-24">
-            <img :src="Icon" class="h-8 mr-3" alt="Company Logo">
-            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Company</span>
-        </a>
+        <Link href="/dashboard" class="flex ml-2 md:mr-24">
+        <img :src="Icon" class="h-8 mr-3" alt="Company Logo">
+        <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Company</span>
+        </Link>
     </div>
 </template>

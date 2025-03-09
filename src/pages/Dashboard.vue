@@ -16,24 +16,14 @@ onMounted(() => {
                 router.setMenus(body.menus)
                 router.setSession(body)
                 router.setToken(headers.sessiontoken, headers.refreshtoken)
-                router.reverseLoading()
             } else {
                 console.log(body)
-                refreshToken().then(r => {
-                    const { headers, status } = r
-                    if (status >= 200 && status < 300) {
-                        router.setToken(headers.sessiontoken, headers.refreshtoken)
-                    } else {
-                        console.log(body)
-                        router.setToken('', '')
-                        router.setPath('/')
-                    }
-                    router.reverseLoading()
-                }).catch(e => {
-                    router.reverseLoading()
-                    console.log(e)
-                })
+                if (!headers.sessiontoken) {
+                    router.setToken('', '')
+                    router.setPath('/')
+                }
             }
+            router.reverseLoading()
         }).catch(e => {
             router.reverseLoading()
             console.log(e)

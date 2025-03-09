@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"strings"
 )
 
 func StmtClose(w http.ResponseWriter, stmt *sql.Stmt) {
@@ -59,10 +60,18 @@ func TxClose(tx *sql.Tx, w http.ResponseWriter) {
 
 func DefaultError(w http.ResponseWriter) {
 	if r := recover(); r != nil {
-		w.WriteHeader(500)
 		msg := fmt.Sprint("", r)
 		log.Println(msg)
 		log.Println(string(debug.Stack()))
+		if strings.HasPrefix(msg, "method") {
+			w.WriteHeader(405)
+		} else if strings.HasPrefix(msg, "Token") {
+			w.WriteHeader(403)
+		} else if strings.HasPrefix(msg, "bad:") {
+			w.WriteHeader(400)
+		} else {
+			w.WriteHeader(500)
+		}
 		SendJson(map[string]string{"msg": msg}, w)
 	}
 }

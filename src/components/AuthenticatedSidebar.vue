@@ -5,10 +5,10 @@ import { useRouter } from '../stores/router'
 import SidebarMenu from './SidebarMenu.vue'
 
 const sidebar = useSidebar(), router = useRouter()
-const openMenu = ref(0)
 const sidebarClass = computed(() =>
     'fixed top-0 left-0 z-20 flex flex-col flex-shrink-0 w-64 h-full pt-16 font-normal duration-75 lg:flex transition-width ' + (!sidebar.open ? 'hidden' : ''))
 const menus = computed(() => router.menus.map(m => mapMenus(m)))
+const openMenu = ref(menus.value.map((m, i) => m.selected ? i : null).filter(v => v)[0])
 
 function mapMenus(m) {
     const r = { ...m }
@@ -28,7 +28,8 @@ function mapMenus(m) {
                 <div
                     class="flex-1 px-3 space-y-1 bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
                     <ul class="pb-2 space-y-2">
-                        <SidebarMenu v-for="menu, i in menus" :key="i" :metadata="menu" :index="i" :open="i === openMenu"
+                        <SidebarMenu v-for="menu, i in menus" :key="i" :metadata="menu" :index="i"
+                            :open="i === openMenu"
                             @opening="v => { if (openMenu === v) openMenu = 0; else openMenu = v; }" />
                     </ul>
                 </div>
