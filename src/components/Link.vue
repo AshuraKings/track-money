@@ -9,6 +9,7 @@ const { href } = defineProps({
 const router = useRouter()
 
 function go() {
+    console.log(href)
     if (href) router.setPath(href)
 }
 </script>

@@ -22,6 +22,7 @@ func ValidationRole(w http.ResponseWriter, r *http.Request, roles []string) bool
 	claim := ParseToken(r)
 	id, err := strconv.ParseUint(claim["sub"].(string), 10, 64)
 	if err != nil {
+		next = false
 		panic(err)
 	}
 	if r.RequestURI != "/api/logout" {
@@ -30,20 +31,23 @@ func ValidationRole(w http.ResponseWriter, r *http.Request, roles []string) bool
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
+		next = false
 		panic(err)
 	}
 	tx, err := db.Begin()
 	defer lib.TxClose(tx, w)
 	if err != nil {
+		next = false
 		panic(err)
 	}
 	user, err := repo.UserWithRoleByUserId(tx, id)
 	if err != nil {
+		next = false
 		panic(err)
 	}
 	if len(roles) > 0 && arrayutils.AllOf(roles, func(v string, _ int) bool { return v != user.Role.Nm }) {
 		next = false
-		panic("invalid role")
+		panic("Token invalid role")
 	}
 	return next
 }

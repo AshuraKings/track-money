@@ -4,6 +4,7 @@ import Login from './pages/Login.vue'
 import Register from './pages/Register.vue'
 import Loading from 'vue-loading-overlay'
 import Dashboard from './pages/Dashboard.vue'
+import Users from './pages/Users.vue'
 
 const router = useRouter()
 </script>
@@ -12,4 +13,5 @@ const router = useRouter()
   <Dashboard v-if="router.path === '/dashboard'" />
   <Register v-if="router.path === '/register'" />
   <Login v-if="router.path === '/'" />
+  <Users v-if="router.path === '/master/users'" />
 </template>

@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS menus(
     deleted_at TIMESTAMP,
     updated_at TIMESTAMP
 );
-MERGE INTO menus m USING (SELECT 'Dashboard' label,NULL link,'md-dashboard' icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
+MERGE INTO menus m USING (SELECT 'Dashboard' label,'/dashboard' link,'md-dashboard' icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 MERGE INTO menus m USING (SELECT 'Master' label,NULL link,'fa-database' icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 MERGE INTO menus m USING (SELECT 'Users' label,'/master/users' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 MERGE INTO menus m USING (SELECT 'Roles' label,'/master/roles' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
