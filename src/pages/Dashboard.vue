@@ -21,7 +21,7 @@ onMounted(() => {
                 if (!headers.sessiontoken) {
                     router.setToken('', '')
                     router.setPath('/')
-                }
+                } else router.setToken(headers.sessiontoken, headers.refreshtoken)
             }
             router.reverseLoading()
         }).catch(e => {
