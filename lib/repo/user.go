@@ -159,6 +159,7 @@ func EditUser(tx *sql.Tx, user User) error {
 }
 
 func AddUser(tx *sql.Tx, user User) (uint64, error) {
+	log.Println("Add User", user)
 	err := addUser(tx, user)
 	if err != nil {
 		return 0, err

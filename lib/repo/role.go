@@ -2,6 +2,8 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
+	"log"
 	"time"
 )
 
@@ -23,6 +25,7 @@ func RoleById(tx *sql.Tx, id uint64) (Role, error) {
 }
 
 func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
+	log.Printf("Query \"%s\" with %v", query, args)
 	role := Role{}
 	rows, err := tx.Query(query, args...)
 	defer func(rows *sql.Rows) {
@@ -40,6 +43,8 @@ func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
 		if err = rows.Scan(&role.Id, &role.Nm, &role.CreatedAt, &role.UpdatedAt); err != nil {
 			return Role{}, err
 		}
+	} else {
+		return Role{}, errors.New("role not found")
 	}
 	if err = rows.Err(); err != nil {
 		return Role{}, err
@@ -48,6 +53,7 @@ func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
 }
 
 func selectQueryRoles(tx *sql.Tx, query string, args ...any) ([]Role, error) {
+	log.Printf("Query \"%s\"", query)
 	var roles []Role
 	rows, err := tx.Query(query, args...)
 	defer func(rows *sql.Rows) {
