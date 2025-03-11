@@ -4,6 +4,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { useRouter } from '../stores/router'
 import { getUsers } from '../api/master'
 import AddUser from '../components/modals/AddUser.vue'
+import EditUser from '../components/modals/EditUser.vue'
 
 const router = useRouter()
 const users = ref([])
@@ -84,7 +85,7 @@ function reload() {
                                 {{ user.role }}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                add and edit
+                                <EditUser @onClose="reload" :user />
                             </td>
                         </tr>
                     </tbody>

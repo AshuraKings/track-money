@@ -39,7 +39,6 @@ func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
 		return Role{}, err
 	}
 	if rows.Next() {
-		role := Role{}
 		if err = rows.Scan(&role.Id, &role.Nm, &role.CreatedAt, &role.UpdatedAt); err != nil {
 			return Role{}, err
 		}
