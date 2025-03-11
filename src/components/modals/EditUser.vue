@@ -8,10 +8,10 @@ import DialInput from '../DialInput.vue'
 
 const { user } = defineProps({ user: Object, })
 const emit = defineEmits(['onClose'])
-const open = ref(false), success = ref(''), error = ref(''), nm = ref(''), username = ref(''), pass = ref(''), repass = ref(''), roles = ref([]), role = ref('')
+const open = ref(false), success = ref(''), error = ref(''), nm = ref(''), username = ref(''), roles = ref([]), role = ref('')
 const router = useRouter()
 
-const invalidForm = computed(() => router.loading || !nm.value || username.value.length < 5 || pass.value.length < 8 || repass.value !== pass.value || !role.value)
+const invalidForm = computed(() => router.loading || !nm.value || username.value.length < 5 || !role.value)
 const roleMap = computed(() => {
     const acc = {}
     for (const role of roles.value) {
@@ -50,7 +50,7 @@ watch(open, (newOpen, _) => {
 
 function cancelled() {
     open.value = false
-    success.value = error.value = nm.value = username.value = pass.value = repass.value = role.value = ''
+    success.value = error.value = nm.value = username.value = role.value = ''
     roles.value = []
     emit('onClose')
 }
@@ -70,10 +70,6 @@ function openClose() {
             <DialInput type="text" id="nm" name="nm" label="Name" :disabled="router.loading" v-model="nm" />
             <DialInput type="text" id="username" name="username" label="Username" :disabled="router.loading"
                 v-model="username" />
-            <DialInput type="password" id="pass" name="pass" label="Password" :disabled="router.loading"
-                v-model="pass" />
-            <DialInput type="password" id="repass" name="repass" label="Re Type Password" :disabled="router.loading"
-                v-model="repass" />
             <DialSelect id="role" name="role" label="Role" :disabled="router.loading" v-model="role" :items="roleMap" />
         </form>
         <template #header>
