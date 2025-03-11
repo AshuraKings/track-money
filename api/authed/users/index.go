@@ -26,7 +26,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
-		lib.SendJson(map[string]any{}, w)
+		put(w, r)
 	} else if r.Method == "DELETE" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
@@ -39,6 +39,61 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		posting(w, r)
 	} else {
 		panic("method not allowed")
+	}
+}
+
+func put(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		panic(err)
+	}
+	validationPut(body)
+	db, err := db.DbConn()
+	defer lib.CloseDb(w, db)
+	if err != nil {
+		panic(err)
+	}
+	tx, err := db.Begin()
+	defer lib.TxClose(tx, w)
+	if err != nil {
+		panic(err)
+	}
+	id := uint64(body["id"].(float64))
+	user, err := repo.UserById(tx, id)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("User", user)
+	user.Nm = body["name"].(string)
+	user.Username = body["username"].(string)
+	user.RoleId = uint64(body["role"].(float64))
+	err = repo.EditUser(tx, user)
+	if err != nil {
+		panic(err)
+	}
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
+}
+
+func validationPut(body map[string]any) {
+	log.Println("Req", body)
+	keys := mapsutils.KeysOfMap(body)
+	for _, k := range []string{"name", "username", "role", "id"} {
+		if !arrayutils.Contains(keys, k) {
+			panic(fmt.Sprintf("bad: %s is required", k))
+		}
+	}
+	name, username, role, id := body["name"].(string), body["username"].(string), body["role"].(float64), body["id"].(float64)
+	if id < 1 {
+		panic("bad: id not found")
+	}
+	if name == "" {
+		panic("bad: name is required")
+	}
+	if len(username) < 5 {
+		panic("bad: name min 5")
+	}
+	if role < 1 {
+		panic("bad: role not found")
 	}
 }
 

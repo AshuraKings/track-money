@@ -1,10 +1,11 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRouter } from '../../stores/router'
-import { getRoles } from '../../api/master'
+import { editUser, getRoles } from '../../api/master'
 import BaseModal from '../../layouts/BaseModal.vue'
 import DialSelect from '../DialSelect.vue'
 import DialInput from '../DialInput.vue'
+import MessageModal from '../MessageModal.vue'
 
 const { user } = defineProps({ user: Object, })
 const emit = defineEmits(['onClose'])
@@ -58,6 +59,30 @@ function cancelled() {
 function openClose() {
     open.value = !open.value
 }
+
+function submit() {
+    router.reverseLoading()
+    editUser({ id: user.id, name: nm.value, role: parseInt(role.value), username: username.value }).then(r => {
+        const { body, headers, status } = r
+        if (status >= 200 && status < 300) {
+            success.value = body.msg
+            router.setToken(headers.sessiontoken, headers.refreshtoken)
+        } else {
+            console.log(body)
+            if (!headers.sessiontoken) {
+                router.setToken('', '')
+                router.setPath('/')
+            } else {
+                router.setToken(headers.sessiontoken, headers.refreshtoken)
+                error.value = body.msg
+            }
+        }
+        router.reverseLoading()
+    }).catch(e => {
+        console.log(e)
+        router.reverseLoading()
+    })
+}
 </script>
 <template>
     <button @click.prevent="openClose" type="button"
@@ -72,6 +97,9 @@ function openClose() {
                 v-model="username" />
             <DialSelect id="role" name="role" label="Role" :disabled="router.loading" v-model="role" :items="roleMap" />
         </form>
+        <MessageModal @onClose="() => { success = ''; cancelled(); }" :open="success !== ''" :message="success" title=""
+            severity="success" />
+        <MessageModal @onClose="() => error = ''" :open="error !== ''" :message="error" title="" severity="danger" />
         <template #header>
             <h3 class="text-xl font-semibold dark:text-white">
                 Edit User {{ user.name }}
@@ -82,7 +110,7 @@ function openClose() {
                 class="text-gray-900 mr-2 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-green-300 border border-gray-200 font-medium inline-flex items-center rounded-lg text-base px-3 py-2.5 text-center dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700">
                 Cancel
             </button>
-            <button type="submit" :disabled="invalidForm"
+            <button type="submit" :disabled="invalidForm" @click.prevent="submit"
                 class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
                 Submit
             </button>

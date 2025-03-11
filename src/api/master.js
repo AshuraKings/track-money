@@ -22,6 +22,28 @@ export const getUsers = async () => {
     return { headers: h, body: body2, status }
 }
 
+export const editUser = async (body = { name: '', username: '', id: 0, role: 0 }) => {
+    let headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
+    const res = await fetch('/api/authed/users', { method: 'PUT', body: JSON.stringify(body), headers })
+    const status = res.status
+    const body2 = await res.json()
+    if (body2.msg === 'Token is expired') {
+        const r = await refreshToken()
+        const { headers, status } = r
+        if (status >= 200 && status < 300) {
+            localStorage.setItem('refreshToken', headers.refreshtoken)
+            localStorage.setItem('sessionToken', headers.sessiontoken)
+            return await editUser(body)
+        }
+    }
+    let resHeader = res.headers
+    const h = {}
+    resHeader.forEach((v, k) => h[k] = v)
+    return { headers: h, body: body2, status }
+}
+
 export const addUser = async (body = { name: '', username: '', password: '', role: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
