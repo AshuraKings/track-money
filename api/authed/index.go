@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 	"track/lib"
 	"track/lib/db"
@@ -64,6 +65,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func menuToMap(v repo.Menu, _ int) map[string]any {
+	subs := v.SubMenus
+	indexed := arrayutils.Map(subs, func(v repo.Menu, _ int) int { return int(v.Id) })
+	sort.Ints(indexed)
 	return map[string]any{
 		"createdAt": v.CreatedAt,
 		"icon":      v.Icon,
@@ -72,6 +76,13 @@ func menuToMap(v repo.Menu, _ int) map[string]any {
 		"link":      v.Link,
 		"updatedAt": v.UpdatedAt,
 		"parent":    v.ParentId,
-		"subs":      arrayutils.Map(v.SubMenus, menuToMap),
+		"subs": arrayutils.Map(arrayutils.Map(indexed, func(v int, _ int) repo.Menu {
+			for _, m := range subs {
+				if m.Id == uint64(v) {
+					return m
+				}
+			}
+			return repo.Menu{}
+		}), menuToMap),
 	}
 }

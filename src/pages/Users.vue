@@ -5,6 +5,7 @@ import { useRouter } from '../stores/router'
 import { getUsers } from '../api/master'
 import AddUser from '../components/modals/AddUser.vue'
 import EditUser from '../components/modals/EditUser.vue'
+import DelUser from '../components/modals/DelUser.vue'
 
 const router = useRouter()
 const users = ref([])
@@ -86,6 +87,7 @@ function reload() {
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 <EditUser @onClose="reload" :user />
+                                <DelUser @onClose="reload" :user />
                             </td>
                         </tr>
                     </tbody>

@@ -30,7 +30,7 @@ func MenuById(tx *sql.Tx, id uint64) (Menu, error) {
 func MenuByRoleId(tx *sql.Tx, id uint64) ([]Menu, error) {
 	query := "SELECT m.id,m.label,m.link,m.icon,m.created_at,m.updated_at,mhm.parent_id FROM role_has_menu rhm "
 	query += "LEFT JOIN menus m ON m.id=rhm.menu_id AND m.deleted_at IS NULL LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id "
-	query += "WHERE rhm.role_id=$1"
+	query += "WHERE rhm.role_id=$1 ORDER BY 1"
 	return selectQueryMenus(tx, query, id)
 }
 
