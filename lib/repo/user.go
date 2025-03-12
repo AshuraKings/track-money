@@ -73,7 +73,7 @@ func selectQueryAUserWithRole(tx *sql.Tx, query string, args ...any) (UserWithRo
 }
 
 func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {
-	log.Printf("Query \"%s\"", query)
+	log.Printf("Query \"%s\" with %v", query, args)
 	user := User{Id: 0}
 	rows, err := tx.Query(query, args...)
 	defer func(rows *sql.Rows) {
@@ -142,7 +142,7 @@ func DeleteUser(tx *sql.Tx, user User) error {
 }
 
 func EditUser(tx *sql.Tx, user User) error {
-	query := "UPDATE users SET nm=$1,username=$2,updated_at=now() WHERE id=$3"
+	query := "UPDATE users SET nm=$1,username=$2,role_id=$3,updated_at=now() WHERE id=$4"
 	stmt, err := tx.Prepare(query)
 	defer func(stmt *sql.Stmt) {
 		if stmt != nil {
@@ -154,11 +154,12 @@ func EditUser(tx *sql.Tx, user User) error {
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(user.Nm, user.Username, user.Id)
+	_, err = stmt.Exec(user.Nm, user.Username, user.RoleId, user.Id)
 	return err
 }
 
 func AddUser(tx *sql.Tx, user User) (uint64, error) {
+	log.Println("Add User", user)
 	err := addUser(tx, user)
 	if err != nil {
 		return 0, err

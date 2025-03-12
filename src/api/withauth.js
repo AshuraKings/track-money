@@ -37,7 +37,7 @@ export const refreshToken = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('refreshToken')}`)
-    const res = await fetch('/api/authed', { method: 'GET', headers })
+    const res = await fetch('/api/authed/refresh', { method: 'GET', headers })
     const status = res.status
     let resHeader = res.headers
     const body2 = await res.json()

@@ -3,33 +3,38 @@ import { onMounted, ref } from 'vue'
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { useRouter } from '../stores/router'
 import { getUsers } from '../api/master'
+import AddUser from '../components/modals/AddUser.vue'
+import EditUser from '../components/modals/EditUser.vue'
+import DelUser from '../components/modals/DelUser.vue'
 
 const router = useRouter()
 const users = ref([])
 
 onMounted(() => {
     router.setTitle('Master Users')
-    setTimeout(() => {
-        router.reverseLoading()
-        getUsers().then(r => {
-            const { body, headers, status } = r
-            if (status >= 200 && status < 300) {
-                users.value = body.users
-                router.setToken(headers.sessiontoken, headers.refreshtoken)
-            } else {
-                console.log(body)
-                if (!headers.sessiontoken) {
-                    router.setToken('', '')
-                    router.setPath('/')
-                }
-            }
-            router.reverseLoading()
-        }).catch(e => {
-            console.log(e)
-            router.reverseLoading()
-        })
-    }, 500)
+    setTimeout(() => reload(), 500)
 })
+
+function reload() {
+    router.reverseLoading()
+    getUsers().then(r => {
+        const { body, headers, status } = r
+        if (status >= 200 && status < 300) {
+            users.value = body.users
+            router.setToken(headers.sessiontoken, headers.refreshtoken)
+        } else {
+            console.log(body)
+            if (!headers.sessiontoken) {
+                router.setToken('', '')
+                router.setPath('/')
+            } else router.setToken(headers.sessiontoken, headers.refreshtoken)
+        }
+        router.reverseLoading()
+    }).catch(e => {
+        console.log(e)
+        router.reverseLoading()
+    })
+}
 </script>
 <template>
     <AuthenticatedLayout>
@@ -43,7 +48,7 @@ onMounted(() => {
                 </div>
                 <div class="sm:flex">
                     <div class="flex items-center ml-auto space-x-2 sm:space-x-3">
-                        Ops
+                        <AddUser @onClose="reload" />
                     </div>
                 </div>
                 <table class="mt-4 min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
@@ -81,7 +86,8 @@ onMounted(() => {
                                 {{ user.role }}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                add and edit
+                                <EditUser @onClose="reload" :user />
+                                <DelUser @onClose="reload" :user />
                             </td>
                         </tr>
                     </tbody>
