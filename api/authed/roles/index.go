@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"track/lib"
 	"track/lib/db"
@@ -8,6 +9,7 @@ import (
 	"track/lib/session"
 
 	arrayutils "github.com/AchmadRifai/array-utils"
+	mapsutils "github.com/AchmadRifai/maps-utils"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +23,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
-		lib.SendJson(map[string]any{}, w)
+		posting(w, r)
 	} else if r.Method == "PUT" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
@@ -34,6 +36,40 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		lib.SendJson(map[string]any{}, w)
 	} else {
 		panic("method not allowed")
+	}
+}
+
+func posting(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		panic(err)
+	}
+	validationPost(body)
+	db, err := db.DbConn()
+	defer lib.CloseDb(w, db)
+	if err != nil {
+		panic(err)
+	}
+	tx, err := db.Begin()
+	defer lib.TxClose(tx, w)
+	if err != nil {
+		panic(err)
+	}
+	err = repo.AddRole(tx, body["name"].(string))
+	if err != nil {
+		panic(err)
+	}
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
+}
+
+func validationPost(body map[string]any) {
+	keys := mapsutils.KeysOfMap(body)
+	if !arrayutils.Contains(keys, "name") {
+		panic("bad: name is required")
+	}
+	name := body["name"].(string)
+	if name == "" {
+		panic("bad: name is required")
 	}
 }
 

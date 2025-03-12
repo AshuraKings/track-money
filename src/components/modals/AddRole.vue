@@ -4,6 +4,7 @@ import { useRouter } from '../../stores/router'
 import BaseModal from '../../layouts/BaseModal.vue'
 import MessageModal from '../MessageModal.vue'
 import DialInput from '../DialInput.vue'
+import { addRole } from '../../api/master'
 
 const emit = defineEmits(['onClose'])
 const open = ref(false), success = ref(''), error = ref(''), nm = ref('')
@@ -22,7 +23,27 @@ function openClose() {
 }
 
 function submit() {
-    //
+    router.reverseLoading()
+    addRole({ name: nm.value }).then(r => {
+        const { body, headers, status } = r
+        if (status >= 200 && status < 300) {
+            success.value = body.msg
+            router.setToken(headers.sessiontoken, headers.refreshtoken)
+        } else {
+            console.log(body)
+            if (!headers.sessiontoken) {
+                router.setToken('', '')
+                router.setPath('/')
+            } else {
+                router.setToken(headers.sessiontoken, headers.refreshtoken)
+                error.value = body.msg
+            }
+        }
+        router.reverseLoading()
+    }).catch(e => {
+        console.log(e)
+        router.reverseLoading()
+    })
 }
 </script>
 <template>
@@ -44,7 +65,7 @@ function submit() {
             </h3>
         </template>
         <template #footer>
-            <button @click="cancelled" type="button"
+            <button @click="cancelled" type="button" :disabled="router.loading"
                 class="text-gray-900 mr-2 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-primary-300 border border-gray-200 font-medium inline-flex items-center rounded-lg text-base px-3 py-2.5 text-center dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 dark:focus:ring-gray-700">
                 Cancel
             </button>
