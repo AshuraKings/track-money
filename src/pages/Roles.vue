@@ -4,6 +4,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { useRouter } from '../stores/router'
 import { authed } from '../api/withauth'
 import { getRoles } from '../api/master'
+import AddRole from '../components/modals/AddRole.vue'
 
 const router = useRouter(), roles = ref([])
 
@@ -20,7 +21,7 @@ function reload() {
             router.setMenus(body.menus)
             router.setSession(body)
             router.setToken(headers.sessiontoken, headers.refreshtoken)
-            getRoles().then(r => {
+            if (router.path === '/master/roles') getRoles().then(r => {
                 const { body, headers, status } = r
                 if (status >= 200 && status < 300) {
                     roles.value = body.roles
@@ -37,6 +38,7 @@ function reload() {
                 console.log(e)
                 router.reverseLoading()
             })
+            else router.reverseLoading()
         } else {
             console.log(body)
             if (!headers.sessiontoken) {
@@ -63,7 +65,7 @@ function reload() {
                 </div>
                 <div class="sm:flex">
                     <div class="flex items-center ml-auto space-x-2 sm:space-x-3">
-                        Ops
+                        <AddRole @onClose="reload" />
                     </div>
                 </div>
                 <table class="mt-4 min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">

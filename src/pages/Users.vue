@@ -24,7 +24,7 @@ function reload() {
             router.setMenus(body.menus)
             router.setSession(body)
             router.setToken(headers.sessiontoken, headers.refreshtoken)
-            getUsers().then(r => {
+            if (router.path === '/master/users') getUsers().then(r => {
                 const { body, headers, status } = r
                 if (status >= 200 && status < 300) {
                     users.value = body.users
@@ -41,6 +41,7 @@ function reload() {
                 console.log(e)
                 router.reverseLoading()
             })
+            else router.reverseLoading()
         } else {
             console.log(body)
             if (!headers.sessiontoken) {

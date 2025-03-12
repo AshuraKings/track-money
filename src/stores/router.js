@@ -30,8 +30,12 @@ export const useRouter = defineStore('router', () => {
     name.value = session.user.nm
     role.value = session.role.nm
   }
+  function isRedirectNotRequired(menu = {}) {
+    return menu.link === path.value || menu.subs.some(m => isRedirectNotRequired(m))
+  }
   function setMenus(menu = []) {
     menus.value = menu
+    if (!menu.some(m => isRedirectNotRequired(m))) path.value = '/dashboard'
   }
   return { loading, menus, name, path, reverseLoading, role, setMenus, setPath, setSession, setTitle, setToken, token, username }
 })
