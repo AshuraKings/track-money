@@ -6,6 +6,7 @@ import { authed } from '../api/withauth'
 import { getRoles } from '../api/master'
 import AddRole from '../components/modals/AddRole.vue'
 import EditRole from '../components/modals/EditRole.vue'
+import DelRole from '../components/modals/DelRole.vue'
 
 const router = useRouter(), roles = ref([])
 
@@ -93,6 +94,7 @@ function reload() {
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 <EditRole @onClose="reload" :role="r" />
+                                <DelRole @onClose="reload" :role="r" />
                             </td>
                         </tr>
                     </tbody>
