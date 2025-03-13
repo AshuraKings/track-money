@@ -14,6 +14,27 @@ type Role struct {
 	UpdatedAt *time.Time `json:"updatedAt"`
 }
 
+func EditRole(tx *sql.Tx, role Role) error {
+	query := "UPDATE roles SET nm=$1,updated_at=now() WHERE id=$2"
+	log.Printf("Query \"%s\" with \"%v\"", query, role)
+	stmt, err := tx.Prepare(query)
+	defer func(stmt *sql.Stmt) {
+		if stmt != nil {
+			if err := stmt.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(role.Nm, role.Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func AddRole(tx *sql.Tx, name string) error {
 	query := "MERGE INTO roles r USING(SELECT $1 nm) AS n ON r.nm=n.nm WHEN NOT MATCHED THEN INSERT(nm) VALUES(n.nm)"
 	log.Printf("Query \"%s\" with \"%s\"", query, name)

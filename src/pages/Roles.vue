@@ -5,6 +5,7 @@ import { useRouter } from '../stores/router'
 import { authed } from '../api/withauth'
 import { getRoles } from '../api/master'
 import AddRole from '../components/modals/AddRole.vue'
+import EditRole from '../components/modals/EditRole.vue'
 
 const router = useRouter(), roles = ref([])
 
@@ -91,7 +92,7 @@ function reload() {
                                 {{ r.name }}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                Actions
+                                <EditRole @onClose="reload" :role="r" />
                             </td>
                         </tr>
                     </tbody>
