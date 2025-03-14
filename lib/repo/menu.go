@@ -32,7 +32,7 @@ func AddMenu(tx *sql.Tx, menu Menu) error {
 	}
 	keys := mapsutils.KeysOfMap(mapArgs)
 	query := "INSERT INTO menus(" + strings.Join(keys, ",") + ") VALUES("
-	query += strings.Join(arrayutils.Map(keys, func(_ string, k int) string { return fmt.Sprintf("$%d", k) }), ",") + ") RETURNING id"
+	query += strings.Join(arrayutils.Map(keys, func(_ string, k int) string { return fmt.Sprintf("$%d", k+1) }), ",") + ") RETURNING id"
 	args := arrayutils.Map(keys, func(v string, _ int) any { return mapArgs[v] })
 	log.Printf("Query \"%s\" with %v", query, args)
 	rows, err := tx.Query(query, args...)

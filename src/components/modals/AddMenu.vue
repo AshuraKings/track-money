@@ -1,32 +1,29 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import BaseModal from '../../layouts/BaseModal.vue'
 import { useRouter } from '../../stores/router'
+import BaseModal from '../../layouts/BaseModal.vue'
+import { addMenus, getMenus } from '../../api/master'
 import DialInput from '../DialInput.vue'
-import { addUser, getRoles } from '../../api/master'
 import DialSelect from '../DialSelect.vue'
 import MessageModal from '../MessageModal.vue'
 
 const emit = defineEmits(['onClose'])
-const open = ref(false), success = ref(''), error = ref(''), nm = ref(''), username = ref(''), pass = ref(''), repass = ref(''), roles = ref([]), role = ref('')
+const open = ref(false), success = ref(''), error = ref(''), label = ref(''), link = ref(''), icon = ref(''), parent = ref(''), menus = ref([])
 const router = useRouter()
 
-const invalidForm = computed(() => router.loading || !nm.value || username.value.length < 5 || pass.value.length < 8 || repass.value !== pass.value || !role.value)
-const roleMap = computed(() => {
-    const acc = {}
-    for (const role of roles.value) {
-        acc[role.id] = role.name
-    }
+const invalidForm = computed(() => router.loading || !label.value)
+const fixMenus = computed(() => menus.value.reduce((acc, v) => {
+    acc[v.id] = v.label
     return acc
-})
+}, {}))
 
 watch(open, (newOpen, _) => {
     if (newOpen) {
         router.reverseLoading()
-        getRoles().then(r => {
+        getMenus().then(r => {
             const { body, headers, status } = r
             if (status >= 200 && status < 300) {
-                roles.value = body.roles
+                menus.value = body.menus
                 router.setToken(headers.sessiontoken, headers.refreshtoken)
             } else {
                 console.log(body)
@@ -45,8 +42,8 @@ watch(open, (newOpen, _) => {
 
 function cancelled() {
     open.value = false
-    success.value = error.value = nm.value = username.value = pass.value = repass.value = role.value = ''
-    roles.value = []
+    success.value = error.value = label.value = link.value = icon.value = parent.value = ''
+    menus.value = []
     emit('onClose')
 }
 
@@ -56,7 +53,11 @@ function openClose() {
 
 function submit() {
     router.reverseLoading()
-    addUser({ name: nm.value, password: pass.value, role: parseInt(role.value), username: username.value }).then(r => {
+    const body = { label: label.value, createdAt: "2025-03-14T21:55:54.554924Z" }
+    if (link.value) body.link = link.value
+    if (icon.value) body.icon = icon.value
+    if (parent.value) body.parentId = parent.value
+    addMenus(body).then(r => {
         const { body, headers, status } = r
         if (status >= 200 && status < 300) {
             success.value = body.msg
@@ -82,25 +83,21 @@ function submit() {
     <button @click.prevent="openClose" type="button"
         class="inline-flex items-center justify-center w-1/2 px-3 py-2 text-sm font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 sm:w-auto dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
         <v-icon name="md-add" />
-        Add User
+        Add Menu
     </button>
     <BaseModal @onClose="cancelled" :open>
         <form>
-            <DialInput type="text" id="nm" name="nm" label="Name" :disabled="router.loading" v-model="nm" />
-            <DialInput type="text" id="username" name="username" label="Username" :disabled="router.loading"
-                v-model="username" />
-            <DialInput type="password" id="pass" name="pass" label="Password" :disabled="router.loading"
-                v-model="pass" />
-            <DialInput type="password" id="repass" name="repass" label="Re Type Password" :disabled="router.loading"
-                v-model="repass" />
-            <DialSelect id="role" name="role" label="Role" :disabled="router.loading" v-model="role" :items="roleMap" />
+            <DialInput type="text" id="label" name="label" label="Label" :disabled="router.loading" v-model="label" />
+            <DialInput type="text" id="link" name="link" label="Link" :disabled="router.loading" v-model="link" />
+            <DialInput type="text" id="icon" name="icon" label="Icon" :disabled="router.loading" v-model="icon" />
+            <DialSelect id="parent" name="parent" label="Parent Menu" :disabled="router.loading" v-model="parent"
+                :items="fixMenus" />
         </form>
-        <MessageModal @onClose="() => { success = ''; cancelled(); }" :open="success !== ''" :message="success" title=""
-            severity="success" />
+        <MessageModal @onClose="cancelled" :open="success !== ''" :message="success" title="" severity="success" />
         <MessageModal @onClose="() => error = ''" :open="error !== ''" :message="error" title="" severity="danger" />
         <template #header>
             <h3 class="text-xl font-semibold dark:text-white">
-                Add User
+                Add Menu
             </h3>
         </template>
         <template #footer>

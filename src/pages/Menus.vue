@@ -4,6 +4,7 @@ import { useRouter } from '../stores/router'
 import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { getMenus } from '../api/master'
 import { authed } from '../api/withauth'
+import AddMenu from '../components/modals/AddMenu.vue'
 
 const menus = ref([]), router = useRouter()
 
@@ -64,7 +65,7 @@ function reload() {
                 </div>
                 <div class="sm:flex">
                     <div class="flex items-center ml-auto space-x-2 sm:space-x-3">
-                        Opts
+                        <AddMenu @onClose="reload" />
                     </div>
                 </div>
                 <table class="mt-4 min-w-full divide-y divide-gray-200 table-fixed dark:divide-gray-600">
