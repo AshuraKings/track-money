@@ -154,6 +154,28 @@ export const addRole = async (body = { name: '' }) => {
     return { headers: h, body: body2, status }
 }
 
+export const editMenus = async (body = { label: '', createdAt: "2025-03-14T21:55:54.554924Z", id: 0 }) => {
+    let headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
+    const res = await fetch('/api/authed/menus', { method: 'PUT', body: JSON.stringify(body), headers })
+    const status = res.status
+    const body2 = await res.json()
+    if (body2.msg === 'Token is expired') {
+        const r = await refreshToken()
+        const { headers, status } = r
+        if (status >= 200 && status < 300) {
+            localStorage.setItem('refreshToken', headers.refreshtoken)
+            localStorage.setItem('sessionToken', headers.sessiontoken)
+            return await editMenus(body)
+        }
+    }
+    let resHeader = res.headers
+    const h = {}
+    resHeader.forEach((v, k) => h[k] = v)
+    return { headers: h, body: body2, status }
+}
+
 export const addMenus = async (body = { label: '', createdAt: "2025-03-14T21:55:54.554924Z" }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')

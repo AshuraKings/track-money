@@ -5,6 +5,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { getMenus } from '../api/master'
 import { authed } from '../api/withauth'
 import AddMenu from '../components/modals/AddMenu.vue'
+import EditMenu from '../components/modals/EditMenu.vue'
 
 const menus = ref([]), router = useRouter()
 
@@ -109,7 +110,7 @@ function reload() {
                                 {{ m.parentId }}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                Actions
+                                <EditMenu @onClose="reload" :menu="m" />
                             </td>
                         </tr>
                     </tbody>
