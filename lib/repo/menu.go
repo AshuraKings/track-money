@@ -10,14 +10,14 @@ import (
 )
 
 type Menu struct {
-	Id        uint64
-	Label     string
-	Link      *string
-	Icon      *string
+	Id        uint64     `json:"id"`
+	Label     string     `json:"label"`
+	Link      *string    `json:"link"`
+	Icon      *string    `json:"icon"`
 	CreatedAt time.Time  `json:"createdAt"`
 	UpdatedAt *time.Time `json:"updatedAt"`
-	ParentId  *uint64
-	SubMenus  []Menu
+	ParentId  *uint64    `json:"parentId"`
+	SubMenus  []Menu     `json:"subs"`
 }
 
 func MenuById(tx *sql.Tx, id uint64) (Menu, error) {
@@ -32,6 +32,41 @@ func MenuByRoleId(tx *sql.Tx, id uint64) ([]Menu, error) {
 	query += "LEFT JOIN menus m ON m.id=rhm.menu_id AND m.deleted_at IS NULL LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id "
 	query += "WHERE rhm.role_id=$1 ORDER BY 1"
 	return selectQueryMenus(tx, query, id)
+}
+
+func AllMenus(tx *sql.Tx) ([]Menu, error) {
+	query := "SELECT m.id,m.label,m.link,m.icon,m.created_at,m.updated_at,mhm.parent_id FROM menus m "
+	query += "LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id WHERE m.deleted_at IS NULL"
+	return selectQueryMenus2(tx, query)
+}
+
+func selectQueryMenus2(tx *sql.Tx, query string, args ...any) ([]Menu, error) {
+	log.Printf("Query \"%s\" with %v", query, args)
+	rows, err := tx.Query(query, args...)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
+	if err != nil {
+		return nil, err
+	}
+	tmp, err := rowsToMenuTmp(rows)
+	if err != nil {
+		return nil, err
+	}
+	return arrayutils.Map(tmp, func(v map[string]any, _ int) Menu {
+		mId := v["id"].(uint64)
+		mLabel := v["label"].(string)
+		mLink := v["link"].(*string)
+		mIcon := v["icon"].(*string)
+		mCreatedAt := v["createdAt"].(time.Time)
+		mUpdatedAt := v["updatedAt"].(*time.Time)
+		parentId := v["parentId"].(*uint64)
+		return Menu{Id: mId, Label: mLabel, Link: mLink, Icon: mIcon, CreatedAt: mCreatedAt, UpdatedAt: mUpdatedAt, ParentId: parentId}
+	}), nil
 }
 
 func selectQueryAMenu(tx *sql.Tx, query string, args ...any) (Menu, error) {
