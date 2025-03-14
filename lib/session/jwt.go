@@ -99,7 +99,7 @@ func GenSessionToken(id uint64) (string, error) {
 }
 
 func GenRefreshToken(id uint64) (string, error) {
-	return lockWithExp(id, time.Now().Add(time.Hour).Unix())
+	return lockWithExp(id, time.Now().Add(time.Hour*8).Unix())
 }
 
 func lockWithExp(id uint64, exp int64) (string, error) {

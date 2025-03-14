@@ -2,7 +2,9 @@ package repo
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	arrayutils "github.com/AchmadRifai/array-utils"
@@ -20,10 +22,65 @@ type Menu struct {
 	SubMenus  []Menu     `json:"subs"`
 }
 
+func AddMenu(tx *sql.Tx, menu Menu) error {
+	mapArgs := map[string]any{"label": menu.Label}
+	if menu.Link != nil {
+		mapArgs["link"] = *menu.Link
+	}
+	if menu.Icon != nil {
+		mapArgs["icon"] = *menu.Icon
+	}
+	keys := mapsutils.KeysOfMap(mapArgs)
+	query := "INSERT INTO menus(" + strings.Join(keys, ",") + ") VALUES("
+	query += strings.Join(arrayutils.Map(keys, func(_ string, k int) string { return fmt.Sprintf("$%d", k) }), ",") + ") RETURNING id"
+	args := arrayutils.Map(keys, func(v string, _ int) any { return mapArgs[v] })
+	log.Printf("Query \"%s\" with %v", query, args)
+	rows, err := tx.Query(query, args...)
+	defer func(rows *sql.Rows) {
+		if rows != nil {
+			if err := rows.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(rows)
+	if err != nil {
+		return err
+	}
+	var id uint64
+	if rows.Next() {
+		if err = rows.Scan(&id); err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("nothing added")
+	}
+	if menu.ParentId != nil {
+		query = "MERGE INTO menu_has_menu m USING (SELECT $1 menu_id,$2 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id "
+		query += "WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id)"
+		args = []any{id, *menu.ParentId}
+		log.Printf("Query \"%s\" with %v", query, args)
+		stmt, err := tx.Prepare(query)
+		defer func(stmt *sql.Stmt) {
+			if stmt != nil {
+				if err := stmt.Close(); err != nil {
+					panic(err)
+				}
+			}
+		}(stmt)
+		if err != nil {
+			return err
+		}
+		_, err = stmt.Exec(args...)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func MenuById(tx *sql.Tx, id uint64) (Menu, error) {
 	query := "SELECT m.id,m.label,m.link,m.icon,m.created_at,m.updated_at,mhm.parent_id FROM menus m "
-	query += "LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id "
-	query += "WHERE m.id=$1 AND m.deleted_at IS NULL"
+	query += "LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id WHERE m.id=$1 AND m.deleted_at IS NULL"
 	return selectQueryAMenu(tx, query, id)
 }
 
