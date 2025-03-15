@@ -26,7 +26,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
-		lib.SendJson(map[string]any{}, w)
+		putting(w, r)
 	} else if r.Method == "DELETE" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
@@ -37,11 +37,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func posting(w http.ResponseWriter, r *http.Request) {
-	var body repo.Menu
+func putting(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		panic(err)
 	}
+	menu := repo.MapToMenu(body)
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -52,8 +53,32 @@ func posting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Menu", body)
-	err = repo.AddMenu(tx, body)
+	log.Println("Menu", menu)
+	err = repo.EditMenu(tx, menu)
+	if err != nil {
+		panic(err)
+	}
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
+}
+
+func posting(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		panic(err)
+	}
+	menu := repo.MapToMenu(body)
+	db, err := db.DbConn()
+	defer lib.CloseDb(w, db)
+	if err != nil {
+		panic(err)
+	}
+	tx, err := db.Begin()
+	defer lib.TxClose(tx, w)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Menu", menu)
+	err = repo.AddMenu(tx, menu)
 	if err != nil {
 		panic(err)
 	}

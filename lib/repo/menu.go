@@ -22,6 +22,117 @@ type Menu struct {
 	SubMenus  []Menu     `json:"subs"`
 }
 
+func MapToMenu(body map[string]any) Menu {
+	menu, keys := Menu{}, mapsutils.KeysOfMap(body)
+	if arrayutils.Contains(keys, "id") {
+		id := body["id"].(float64)
+		menu.Id = uint64(id)
+	}
+	if !arrayutils.Contains(keys, "label") {
+		panic("bad: label is required")
+	}
+	menu.Label = body["label"].(string)
+	if arrayutils.Contains(keys, "link") {
+		s := body["link"].(string)
+		menu.Link = &s
+	}
+	if arrayutils.Contains(keys, "icon") {
+		s := body["icon"].(string)
+		menu.Icon = &s
+	}
+	if arrayutils.Contains(keys, "parentId") {
+		id := body["parentId"].(float64)
+		parent := uint64(id)
+		menu.ParentId = &parent
+	}
+	return menu
+}
+
+func EditMenu(tx *sql.Tx, menu Menu) error {
+	if err := delASubMenu(tx, menu); err != nil {
+		return err
+	}
+	if menu.ParentId != nil {
+		if err := insASubMenu(tx, menu); err != nil {
+			return err
+		}
+	}
+	query, args, count := "UPDATE menus SET label=$1", []any{menu.Label}, 1
+	if menu.Link != nil {
+		count += 1
+		query += fmt.Sprintf(",link=$%d", count)
+		args = append(args, *menu.Link)
+	}
+	if menu.Icon != nil {
+		count += 1
+		query += fmt.Sprintf(",icon=$%d", count)
+		args = append(args, *menu.Icon)
+	}
+	args = append(args, menu.Id)
+	query += fmt.Sprintf(",updated_at=now() WHERE id=$%d", count+1)
+	log.Printf("Query \"%s\" with %v", query, args)
+	stmt, err := tx.Prepare(query)
+	defer func(stmt *sql.Stmt) {
+		if stmt != nil {
+			if err := stmt.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func insASubMenu(tx *sql.Tx, menu Menu) error {
+	query := "MERGE INTO menu_has_menu m USING (SELECT $1::bigint menu_id,$2::bigint parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id "
+	query += "WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id)"
+	args := []any{menu.Id, *menu.ParentId}
+	log.Printf("Query \"%s\" with %v", query, args)
+	stmt, err := tx.Prepare(query)
+	defer func(stmt *sql.Stmt) {
+		if stmt != nil {
+			if err := stmt.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func delASubMenu(tx *sql.Tx, menu Menu) error {
+	query := "DELETE FROM menu_has_menu WHERE menu_id=$1"
+	log.Printf("Query \"%s\" with %d", query, menu.Id)
+	stmt, err := tx.Prepare(query)
+	defer func(stmt *sql.Stmt) {
+		if stmt != nil {
+			if err := stmt.Close(); err != nil {
+				panic(err)
+			}
+		}
+	}(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(menu.Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func AddMenu(tx *sql.Tx, menu Menu) error {
 	mapArgs := map[string]any{"label": menu.Label}
 	if menu.Link != nil {
@@ -55,23 +166,8 @@ func AddMenu(tx *sql.Tx, menu Menu) error {
 		return fmt.Errorf("nothing added")
 	}
 	if menu.ParentId != nil {
-		query = "MERGE INTO menu_has_menu m USING (SELECT $1 menu_id,$2 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id "
-		query += "WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id)"
-		args = []any{id, *menu.ParentId}
-		log.Printf("Query \"%s\" with %v", query, args)
-		stmt, err := tx.Prepare(query)
-		defer func(stmt *sql.Stmt) {
-			if stmt != nil {
-				if err := stmt.Close(); err != nil {
-					panic(err)
-				}
-			}
-		}(stmt)
-		if err != nil {
-			return err
-		}
-		_, err = stmt.Exec(args...)
-		if err != nil {
+		menu.Id = id
+		if err = insASubMenu(tx, menu); err != nil {
 			return err
 		}
 	}

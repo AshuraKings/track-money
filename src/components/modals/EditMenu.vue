@@ -61,7 +61,7 @@ function submit() {
     const body = { label: label.value, createdAt: "2025-03-14T21:55:54.554924Z", id: menu.id }
     if (link.value) body.link = link.value
     if (icon.value) body.icon = icon.value
-    if (parent.value) body.parentId = parent.value
+    if (parent.value) body.parentId = parseInt(parent.value)
     editMenus(body).then(r => {
         const { body, headers, status } = r
         if (status >= 200 && status < 300) {
