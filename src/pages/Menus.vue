@@ -6,6 +6,7 @@ import { getMenus } from '../api/master'
 import { authed } from '../api/withauth'
 import AddMenu from '../components/modals/AddMenu.vue'
 import EditMenu from '../components/modals/EditMenu.vue'
+import DelMenu from '../components/modals/DelMenu.vue'
 
 const menus = ref([]), router = useRouter()
 
@@ -111,6 +112,7 @@ function reload() {
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 <EditMenu @onClose="reload" :menu="m" />
+                                <DelMenu @onClose="reload" :menu="m" />
                             </td>
                         </tr>
                     </tbody>

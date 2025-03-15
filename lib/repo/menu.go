@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -26,6 +27,9 @@ func MapToMenu(body map[string]any) Menu {
 	menu, keys := Menu{}, mapsutils.KeysOfMap(body)
 	if arrayutils.Contains(keys, "id") {
 		id := body["id"].(float64)
+		if id < 1 {
+			panic("bad: id not found")
+		}
 		menu.Id = uint64(id)
 	}
 	if !arrayutils.Contains(keys, "label") {
@@ -42,10 +46,35 @@ func MapToMenu(body map[string]any) Menu {
 	}
 	if arrayutils.Contains(keys, "parentId") {
 		id := body["parentId"].(float64)
+		if id < 1 {
+			panic("bad: parentId not found")
+		}
 		parent := uint64(id)
 		menu.ParentId = &parent
 	}
 	return menu
+}
+
+func DelMenu(tx *sql.Tx, id uint64) error {
+	menu, err := MenuById(tx, id)
+	if err != nil {
+		return err
+	}
+	if err = delASubMenu(tx, menu); err != nil {
+		return err
+	}
+	query := "UPDATE menus SET deleted_at=now() WHERE id=$1"
+	log.Printf("Query \"%s\" with %d", query, id)
+	stmt, err := tx.Prepare(query)
+	defer closeStmt(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func EditMenu(tx *sql.Tx, menu Menu) error {
@@ -72,13 +101,7 @@ func EditMenu(tx *sql.Tx, menu Menu) error {
 	query += fmt.Sprintf(",updated_at=now() WHERE id=$%d", count+1)
 	log.Printf("Query \"%s\" with %v", query, args)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -95,13 +118,7 @@ func insASubMenu(tx *sql.Tx, menu Menu) error {
 	args := []any{menu.Id, *menu.ParentId}
 	log.Printf("Query \"%s\" with %v", query, args)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -116,13 +133,7 @@ func delASubMenu(tx *sql.Tx, menu Menu) error {
 	query := "DELETE FROM menu_has_menu WHERE menu_id=$1"
 	log.Printf("Query \"%s\" with %d", query, menu.Id)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -147,13 +158,7 @@ func AddMenu(tx *sql.Tx, menu Menu) error {
 	args := arrayutils.Map(keys, func(v string, _ int) any { return mapArgs[v] })
 	log.Printf("Query \"%s\" with %v", query, args)
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return err
 	}
@@ -196,13 +201,7 @@ func AllMenus(tx *sql.Tx) ([]Menu, error) {
 func selectQueryMenus2(tx *sql.Tx, query string, args ...any) ([]Menu, error) {
 	log.Printf("Query \"%s\" with %v", query, args)
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -236,13 +235,7 @@ func selectQueryAMenu(tx *sql.Tx, query string, args ...any) (Menu, error) {
 func selectQueryMenus(tx *sql.Tx, query string, args ...any) ([]Menu, error) {
 	log.Printf("Query \"%s\"", query)
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -252,16 +245,15 @@ func selectQueryMenus(tx *sql.Tx, query string, args ...any) ([]Menu, error) {
 	}
 	menus := arrayutils.Grouping(tmp, func(v map[string]any, _ int) *uint64 { return v["parentId"].(*uint64) })
 	parent := arrayutils.Map(menus[nil], func(v map[string]any, _ int) Menu { return tempRowToMap(v, menus) })
-	arrayutils.Sort(parent, func(v1 Menu, v2 Menu) int {
-		if v1.Id > v2.Id {
-			return -1
-		} else if v1.Id < v2.Id {
-			return 1
-		} else {
-			return 0
+	parentIds := arrayutils.Map(parent, func(v Menu, _ int) int { return int(v.Id) })
+	sort.Ints(parentIds)
+	return arrayutils.Map(arrayutils.Map(parentIds, func(v int, _ int) uint64 { return uint64(v) }), func(v uint64, _ int) Menu {
+		summaries := arrayutils.Filter(parent, func(v2 Menu, _ int) bool { return v2.Id == v })
+		if len(summaries) > 0 {
+			return summaries[0]
 		}
-	})
-	return parent, nil
+		return Menu{}
+	}), nil
 }
 
 func tempRowToMap(v map[string]any, menus map[*uint64][]map[string]any) Menu {
@@ -310,4 +302,20 @@ func rowsToMenuTmp(rows *sql.Rows) ([]map[string]any, error) {
 		return nil, err
 	}
 	return tmp, nil
+}
+
+func closeRows(rows *sql.Rows) {
+	if rows != nil {
+		if err := rows.Close(); err != nil {
+			panic(err)
+		}
+	}
+}
+
+func closeStmt(stmt *sql.Stmt) {
+	if stmt != nil {
+		if err := stmt.Close(); err != nil {
+			panic(err)
+		}
+	}
 }

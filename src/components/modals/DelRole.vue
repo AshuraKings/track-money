@@ -23,7 +23,7 @@
         </template>
         <template #header>
             <h3 class="text-xl font-semibold dark:text-white">
-                Delete User {{ role.name }}
+                Delete Role {{ role.name }}
             </h3>
         </template>
     </BaseModal>
