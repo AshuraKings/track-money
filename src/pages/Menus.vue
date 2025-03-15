@@ -108,7 +108,7 @@ function reload() {
                                 {{ m.icon }}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                {{ m.parentId }}
+                                {{m.parentId ? menus.find(m1 => m1.id === m.parentId).label : ''}}
                             </td>
                             <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                 <EditMenu @onClose="reload" :menu="m" />

@@ -38,6 +38,8 @@ MERGE INTO menus m USING (SELECT 'Wallets' label,'/master/wallets' link,null ico
 MERGE INTO menus m USING (SELECT 'Incomes' label,'/master/incomes' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 MERGE INTO menus m USING (SELECT 'Expenses' label,'/master/expenses' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 MERGE INTO menus m USING (SELECT 'Transactions' label,'/master/transactions' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
+MERGE INTO menus m USING (SELECT 'Reports' label,NULL link,'md-areachart-sharp' icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
+MERGE INTO menus m USING (SELECT 'Monthly Cash' label,'/report/monthly' link,null icon) AS n ON n.label=m.label WHEN NOT MATCHED THEN INSERT(label,link,icon) VALUES(n.label,n.link,n.icon);
 CREATE TABLE IF NOT EXISTS menu_has_menu(
     menu_id BIGINT NOT NULL REFERENCES menus(id),
     parent_id BIGINT NOT NULL REFERENCES menus(id)
@@ -49,6 +51,7 @@ MERGE INTO menu_has_menu m USING (SELECT 6 menu_id,2 parent_id) AS n ON n.menu_i
 MERGE INTO menu_has_menu m USING (SELECT 7 menu_id,2 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id);
 MERGE INTO menu_has_menu m USING (SELECT 8 menu_id,2 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id);
 MERGE INTO menu_has_menu m USING (SELECT 9 menu_id,2 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id);
+MERGE INTO menu_has_menu m USING (SELECT 11 menu_id,10 parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id);
 CREATE TABLE IF NOT EXISTS role_has_menu(
     role_id BIGINT NOT NULL REFERENCES roles(id),
     menu_id BIGINT NOT NULL REFERENCES menus(id)
@@ -62,13 +65,19 @@ MERGE INTO role_has_menu r USING (SELECT 1 role_id,6 menu_id) AS n ON n.role_id=
 MERGE INTO role_has_menu r USING (SELECT 1 role_id,7 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 1 role_id,8 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 1 role_id,9 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 1 role_id,10 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 1 role_id,11 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,1 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,2 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,5 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,6 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,7 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 2 role_id,8 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 2 role_id,10 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 2 role_id,11 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 3 role_id,1 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 3 role_id,10 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
+MERGE INTO role_has_menu r USING (SELECT 3 role_id,11 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 MERGE INTO role_has_menu r USING (SELECT 4 role_id,1 menu_id) AS n ON n.role_id=r.role_id AND n.menu_id=r.menu_id WHEN NOT MATCHED THEN INSERT(role_id,menu_id) VALUES(n.role_id,n.menu_id);
 CREATE TABLE IF NOT EXISTS wallets(
     id BIGSERIAL PRIMARY KEY,

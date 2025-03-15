@@ -3,6 +3,7 @@ package repo
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 )
@@ -90,6 +91,8 @@ func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {
 		if err = rows.Scan(&user.Id, &user.Nm, &user.Username, &user.Password, &user.RoleId, &user.CreatedAt, &user.UpdatedAt); err != nil {
 			return User{}, err
 		}
+	} else {
+		return User{}, fmt.Errorf("nothing found")
 	}
 	if err = rows.Err(); err != nil {
 		return User{}, err
