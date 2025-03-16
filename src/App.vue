@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard.vue'
 import Users from './pages/Users.vue'
 import Roles from './pages/Roles.vue'
 import Menus from './pages/Menus.vue'
+import Wallets from './pages/Wallets.vue'
 
 const router = useRouter()
 </script>
@@ -18,4 +19,5 @@ const router = useRouter()
   <Users v-if="router.path === '/master/users'" />
   <Roles v-if="router.path === '/master/roles'" />
   <Menus v-if="router.path === '/master/menus'" />
+  <Wallets v-if="router.path === '/master/wallets'" />
 </template>
