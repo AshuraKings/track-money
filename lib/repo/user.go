@@ -48,13 +48,7 @@ func UserWithRoleByUserId(tx *sql.Tx, id uint64) (UserWithRole, error) {
 func selectQueryAUserWithRole(tx *sql.Tx, query string, args ...any) (UserWithRole, error) {
 	userWithRole := UserWithRole{}
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return UserWithRole{}, err
 	}
@@ -77,13 +71,7 @@ func selectQueryAUser(tx *sql.Tx, query string, args ...any) (User, error) {
 	log.Printf("Query \"%s\" with %v", query, args)
 	user := User{Id: 0}
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return User{}, err
 	}
@@ -104,13 +92,7 @@ func selectQueryUsers(tx *sql.Tx, query string, args ...any) ([]User, error) {
 	log.Printf("Query \"%s\"", query)
 	var users []User
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}
@@ -130,13 +112,7 @@ func selectQueryUsers(tx *sql.Tx, query string, args ...any) ([]User, error) {
 func DeleteUser(tx *sql.Tx, user User) error {
 	query := "UPDATE users SET deleted_at=now() WHERE id=$1"
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -147,13 +123,7 @@ func DeleteUser(tx *sql.Tx, user User) error {
 func EditUser(tx *sql.Tx, user User) error {
 	query := "UPDATE users SET nm=$1,username=$2,role_id=$3,updated_at=now() WHERE id=$4"
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -169,13 +139,7 @@ func AddUser(tx *sql.Tx, user User) (uint64, error) {
 	}
 	var id uint64
 	rows, err := tx.Query("SELECT id FROM users WHERE username=$1 AND deleted_at IS NULL LIMIT 1", user.Username)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return 0, err
 	}
@@ -195,13 +159,7 @@ func addUser(tx *sql.Tx, user User) error {
 	query = query + "WHEN NOT MATCHED THEN INSERT(nm,sandi,username,role_id) VALUES(n.nm,n.password,n.username,n.role_id)"
 	log.Printf("Query \"%s\"", query)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}

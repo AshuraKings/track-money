@@ -92,7 +92,7 @@ func putting(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	log.Println("Menu", menu)
-	err = repo.EditMenu(tx, menu)
+	err = repo.EditMenu(tx, menu, w)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +116,7 @@ func posting(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	log.Println("Menu", menu)
-	err = repo.AddMenu(tx, menu)
+	err = repo.AddMenu(tx, menu, w)
 	if err != nil {
 		panic(err)
 	}

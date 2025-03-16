@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"sort"
 	"strings"
 	"time"
+	"track/lib"
 
 	arrayutils "github.com/AchmadRifai/array-utils"
 	mapsutils "github.com/AchmadRifai/maps-utils"
@@ -77,13 +79,13 @@ func DelMenu(tx *sql.Tx, id uint64) error {
 	return nil
 }
 
-func EditMenu(tx *sql.Tx, menu Menu) error {
+func EditMenu(tx *sql.Tx, menu Menu, w http.ResponseWriter) error {
 	if err := delASubMenu(tx, menu); err != nil {
 		return err
 	}
 	if menu.ParentId != nil {
-		if err := insASubMenu(tx, menu); err != nil {
-			return err
+		if err := insASubMenu(tx, menu, w); err != nil {
+			panic(err)
 		}
 	}
 	query, args, count := "UPDATE menus SET label=$1", []any{menu.Label}, 1
@@ -101,30 +103,30 @@ func EditMenu(tx *sql.Tx, menu Menu) error {
 	query += fmt.Sprintf(",updated_at=now() WHERE id=$%d", count+1)
 	log.Printf("Query \"%s\" with %v", query, args)
 	stmt, err := tx.Prepare(query)
-	defer closeStmt(stmt)
+	defer lib.StmtClose(w, stmt)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	_, err = stmt.Exec(args...)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	return nil
 }
 
-func insASubMenu(tx *sql.Tx, menu Menu) error {
+func insASubMenu(tx *sql.Tx, menu Menu, w http.ResponseWriter) error {
 	query := "MERGE INTO menu_has_menu m USING (SELECT $1::bigint menu_id,$2::bigint parent_id) AS n ON n.menu_id=m.menu_id AND n.parent_id=m.parent_id "
 	query += "WHEN NOT MATCHED THEN INSERT(menu_id,parent_id) VALUES(n.menu_id,n.parent_id)"
 	args := []any{menu.Id, *menu.ParentId}
 	log.Printf("Query \"%s\" with %v", query, args)
 	stmt, err := tx.Prepare(query)
-	defer closeStmt(stmt)
+	defer lib.StmtClose(w, stmt)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	_, err = stmt.Exec(args...)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	return nil
 }
@@ -144,7 +146,7 @@ func delASubMenu(tx *sql.Tx, menu Menu) error {
 	return nil
 }
 
-func AddMenu(tx *sql.Tx, menu Menu) error {
+func AddMenu(tx *sql.Tx, menu Menu, w http.ResponseWriter) error {
 	mapArgs := map[string]any{"label": menu.Label}
 	if menu.Link != nil {
 		mapArgs["link"] = *menu.Link
@@ -158,22 +160,22 @@ func AddMenu(tx *sql.Tx, menu Menu) error {
 	args := arrayutils.Map(keys, func(v string, _ int) any { return mapArgs[v] })
 	log.Printf("Query \"%s\" with %v", query, args)
 	rows, err := tx.Query(query, args...)
-	defer closeRows(rows)
+	defer lib.RowsClose(w, rows)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	var id uint64
 	if rows.Next() {
 		if err = rows.Scan(&id); err != nil {
-			return err
+			panic(err)
 		}
 	} else {
 		return fmt.Errorf("nothing added")
 	}
 	if menu.ParentId != nil {
 		menu.Id = id
-		if err = insASubMenu(tx, menu); err != nil {
-			return err
+		if err = insASubMenu(tx, menu, w); err != nil {
+			panic(err)
 		}
 	}
 	return nil
@@ -190,6 +192,13 @@ func MenuByRoleId(tx *sql.Tx, id uint64) ([]Menu, error) {
 	query += "LEFT JOIN menus m ON m.id=rhm.menu_id AND m.deleted_at IS NULL LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id "
 	query += "WHERE rhm.role_id=$1 ORDER BY 1"
 	return selectQueryMenus(tx, query, id)
+}
+
+func MenuByRoleId2(tx *sql.Tx, id uint64) ([]Menu, error) {
+	query := "SELECT m.id,m.label,m.link,m.icon,m.created_at,m.updated_at,mhm.parent_id FROM role_has_menu rhm "
+	query += "LEFT JOIN menus m ON m.id=rhm.menu_id AND m.deleted_at IS NULL LEFT JOIN menu_has_menu mhm ON mhm.menu_id=m.id "
+	query += "WHERE rhm.role_id=$1 ORDER BY 1"
+	return selectQueryMenus2(tx, query, id)
 }
 
 func AllMenus(tx *sql.Tx) ([]Menu, error) {

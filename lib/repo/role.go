@@ -18,13 +18,7 @@ func DelRole(tx *sql.Tx, role Role) error {
 	query := "UPDATE roles SET deleted_at=now() WHERE id=$1"
 	log.Printf("Query \"%s\" with \"%v\"", query, role)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -39,13 +33,7 @@ func EditRole(tx *sql.Tx, role Role) error {
 	query := "UPDATE roles SET nm=$1,updated_at=now() WHERE id=$2"
 	log.Printf("Query \"%s\" with \"%v\"", query, role)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -60,13 +48,7 @@ func AddRole(tx *sql.Tx, name string) error {
 	query := "MERGE INTO roles r USING(SELECT $1 nm) AS n ON r.nm=n.nm WHEN NOT MATCHED THEN INSERT(nm) VALUES(n.nm)"
 	log.Printf("Query \"%s\" with \"%s\"", query, name)
 	stmt, err := tx.Prepare(query)
-	defer func(stmt *sql.Stmt) {
-		if stmt != nil {
-			if err := stmt.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(stmt)
+	defer closeStmt(stmt)
 	if err != nil {
 		return err
 	}
@@ -91,13 +73,7 @@ func selectQueryARole(tx *sql.Tx, query string, args ...any) (Role, error) {
 	log.Printf("Query \"%s\" with %v", query, args)
 	role := Role{}
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return Role{}, err
 	}
@@ -118,13 +94,7 @@ func selectQueryRoles(tx *sql.Tx, query string, args ...any) ([]Role, error) {
 	log.Printf("Query \"%s\"", query)
 	var roles []Role
 	rows, err := tx.Query(query, args...)
-	defer func(rows *sql.Rows) {
-		if rows != nil {
-			if err := rows.Close(); err != nil {
-				panic(err)
-			}
-		}
-	}(rows)
+	defer closeRows(rows)
 	if err != nil {
 		return nil, err
 	}

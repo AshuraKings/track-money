@@ -19,7 +19,7 @@ defineProps({
                         </svg>
                     </button>
                 </div>
-                <div class="p-6 space-y-6">
+                <div class="p-6 space-y-6 max-h-96 overflow-y-auto overflow-x-auto">
                     <slot />
                 </div>
                 <div class="items-center p-6 border-t border-gray-200 rounded-b dark:border-gray-700">
