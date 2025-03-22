@@ -4,6 +4,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { useRouter } from '../stores/router'
 import { getWallets } from '../api/master'
 import { authed } from '../api/withauth'
+import AddWallet from '../components/modals/AddWallet.vue'
 
 const wallets = ref([]), router = useRouter()
 
@@ -64,7 +65,7 @@ function reload() {
                 </div>
                 <div class="sm:flex">
                     <div class="flex items-center ml-auto space-x-2 sm:space-x-3">
-                        Ops
+                        <AddWallet @onClose="reload" />
                     </div>
                 </div>
                 <div class="max-w-full overflow-auto">
@@ -83,10 +84,6 @@ function reload() {
                                     class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                     Balance
                                 </th>
-                                <th
-                                    class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
-                                    Actions
-                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
@@ -99,9 +96,6 @@ function reload() {
                                 </td>
                                 <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ w.balance }}
-                                </td>
-                                <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                    Actions
                                 </td>
                             </tr>
                         </tbody>
