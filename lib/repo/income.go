@@ -11,7 +11,7 @@ type Income struct {
 }
 
 func AllIncome(tx *sql.Tx) ([]Income, error) {
-	query := "SELECT id,nm FROM incomes WHERE deleted_at IS NOT NULL"
+	query := "SELECT id,nm FROM incomes WHERE deleted_at IS NULL"
 	return selectQueryIncomes(tx, query)
 }
 
