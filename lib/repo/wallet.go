@@ -2,7 +2,9 @@ package repo
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"strings"
 
 	arrayutils "github.com/AchmadRifai/array-utils"
 	mapsutils "github.com/AchmadRifai/maps-utils"
@@ -12,6 +14,58 @@ type Wallet struct {
 	Id      uint64  `json:"id"`
 	Nm      string  `json:"nm"`
 	Balance float64 `json:"balance"`
+}
+
+func DelWallet(tx *sql.Tx, id uint64) error {
+	query, args := "UPDATE wallets SET deleted_at=now() WHERE id=$1", []any{id}
+	log.Printf("Query \"%s\" with %v", query, args)
+	stmt, err := tx.Prepare(query)
+	defer closeStmt(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func EditWallet(tx *sql.Tx, id uint64, mapChange map[string]any) error {
+	keys, constKeys := mapsutils.KeysOfMap(mapChange), []string{"nm", "balanceUp", "balanceDown"}
+	if len(keys) < 1 || arrayutils.AllOf(keys, func(v string, _ int) bool { return !arrayutils.Contains(constKeys, v) }) {
+		return fmt.Errorf("bad: changes not found")
+	}
+	query, args, queries := "UPDATE wallets SET ", []any{}, []string{}
+	if arrayutils.Contains(keys, "nm") {
+		nm := mapChange["nm"].(string)
+		queries = append(queries, fmt.Sprintf("nm=$%d", (len(args)+1)))
+		args = append(args, nm)
+	}
+	if arrayutils.Contains(keys, "balanceUp") {
+		balanceUp := mapChange["balanceUp"].(float64)
+		queries = append(queries, fmt.Sprintf("balance=balance+$%d", (len(args)+1)))
+		args = append(args, balanceUp)
+	}
+	if arrayutils.Contains(keys, "balanceDown") {
+		balanceDown := mapChange["balanceDown"].(float64)
+		queries = append(queries, fmt.Sprintf("balance=balance-$%d", (len(args)+1)))
+		args = append(args, balanceDown)
+	}
+	query += strings.Join(queries, ",")
+	query += fmt.Sprintf(",updated_at=now() WHERE id=$%d", (len(args) + 1))
+	args = append(args, id)
+	log.Printf("Query \"%s\" with %v", query, args)
+	stmt, err := tx.Prepare(query)
+	defer closeStmt(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func AddWallet(tx *sql.Tx, wallet Wallet) error {

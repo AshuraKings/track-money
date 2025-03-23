@@ -25,22 +25,22 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		posting(w, r)
-	} else if r.Method == "PUT" {
+	} else if r.Method == "DELETE" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
-		putting(w, r)
+		deleting(w, r)
 	} else {
 		panic("method not allowed")
 	}
 }
 
-func putting(w http.ResponseWriter, r *http.Request) {
+func deleting(w http.ResponseWriter, r *http.Request) {
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		panic(err)
 	}
-	validationPut(body)
+	validationDel(body)
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -51,23 +51,20 @@ func putting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	id := body["id"].(float64)
+	err = repo.DelWallet(tx, uint64(id))
+	if err != nil {
+		panic(err)
+	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
-func validationPut(body map[string]any) {
+func validationDel(body map[string]any) {
 	keys := mapsutils.KeysOfMap(body)
-	for _, k := range []string{"id", "nm", "balance"} {
-		if !arrayutils.Contains(keys, k) {
-			panic(fmt.Sprintf("bad: %s is required", k))
-		}
+	if !arrayutils.Contains(keys, "id") {
+		panic("bad: id is required")
 	}
-	nm, balance, id := body["nm"].(string), body["balance"].(float64), body["id"].(float64)
-	if nm == "" {
-		panic("bad: nm is required")
-	}
-	if balance < 0 {
-		panic("bad: balance must be positive or zero")
-	}
+	id := body["id"].(float64)
 	if id < 1 {
 		panic("bad: id not found")
 	}

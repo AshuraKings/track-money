@@ -40,10 +40,18 @@ func CloseDb(w http.ResponseWriter, db *sql.DB) {
 func TxClose(tx *sql.Tx, w http.ResponseWriter) {
 	if tx != nil {
 		if r := recover(); r != nil {
-			w.WriteHeader(500)
 			msg := fmt.Sprint("", r)
 			log.Println(msg)
 			log.Println(string(debug.Stack()))
+			if strings.HasPrefix(msg, "method") {
+				w.WriteHeader(405)
+			} else if strings.HasPrefix(msg, "Token") {
+				w.WriteHeader(403)
+			} else if strings.HasPrefix(msg, "bad:") {
+				w.WriteHeader(400)
+			} else {
+				w.WriteHeader(500)
+			}
 			if err := tx.Rollback(); err != nil {
 				panic(err)
 			}
