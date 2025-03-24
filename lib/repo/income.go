@@ -10,6 +10,21 @@ type Income struct {
 	Nm string `json:"nm"`
 }
 
+func AddIncome(tx *sql.Tx, nm string) error {
+	query, args := "MERGE INTO incomes i USING (SELECT $1 nm) AS n ON i.nm=n.nm WHEN NOT MATCHED THEN INSERT (nm) VALUES(n.nm)", []any{nm}
+	log.Printf("Query \"%s\" with %v", query, args)
+	stmt, err := tx.Prepare(query)
+	defer closeStmt(stmt)
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(args...)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func AllIncome(tx *sql.Tx) ([]Income, error) {
 	query := "SELECT id,nm FROM incomes WHERE deleted_at IS NULL"
 	return selectQueryIncomes(tx, query)

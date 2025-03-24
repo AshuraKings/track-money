@@ -4,6 +4,7 @@ import { useRouter } from '../../stores/router'
 import BaseModal from '../../layouts/BaseModal.vue'
 import DialInput from '../DialInput.vue'
 import MessageModal from '../MessageModal.vue'
+import { addIncome } from '../../api/master'
 
 const emit = defineEmits(['onClose'])
 const open = ref(false), success = ref(''), error = ref(''), nm = ref('')
@@ -22,7 +23,27 @@ function openClose() {
 }
 
 function submit() {
-    //
+    router.reverseLoading()
+    addIncome({ nm: nm.value }).then(r => {
+        const { body, headers, status } = r
+        if (status >= 200 && status < 300) {
+            success.value = body.msg
+            router.setToken(headers.sessiontoken, headers.refreshtoken)
+        } else {
+            console.log(body)
+            if (!headers.sessiontoken) {
+                router.setToken('', '')
+                router.setPath('/')
+            } else {
+                router.setToken(headers.sessiontoken, headers.refreshtoken)
+                error.value = body.msg
+            }
+        }
+        router.reverseLoading()
+    }).catch(e => {
+        console.log(e)
+        router.reverseLoading()
+    })
 }
 </script>
 <template>
