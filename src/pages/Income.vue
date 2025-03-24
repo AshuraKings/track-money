@@ -4,6 +4,7 @@ import AuthenticatedLayout from '../layouts/AuthenticatedLayout.vue'
 import { useRouter } from '../stores/router'
 import { getIncomes } from '../api/master'
 import { authed } from '../api/withauth'
+import AddIncome from '../components/modals/AddIncome.vue'
 
 const incomes = ref([]), router = useRouter()
 
@@ -64,7 +65,7 @@ function reload() {
                 </div>
                 <div class="sm:flex">
                     <div class="flex items-center ml-auto space-x-2 sm:space-x-3">
-                        Opts
+                        <AddIncome @onClose="reload" />
                     </div>
                 </div>
                 <div class="max-w-full overflow-auto">
