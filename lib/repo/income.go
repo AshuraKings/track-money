@@ -10,8 +10,17 @@ type Income struct {
 	Nm string `json:"nm"`
 }
 
+func DelIncome(tx *sql.Tx, id uint64) error {
+	query, args := "UPDATE incomes SET deleted_at=now() WHERE id=$1", []any{id}
+	return stmtExec(tx, query, args...)
+}
+
 func AddIncome(tx *sql.Tx, nm string) error {
 	query, args := "MERGE INTO incomes i USING (SELECT $1 nm) AS n ON i.nm=n.nm WHEN NOT MATCHED THEN INSERT (nm) VALUES(n.nm)", []any{nm}
+	return stmtExec(tx, query, args...)
+}
+
+func stmtExec(tx *sql.Tx, query string, args ...any) error {
 	log.Printf("Query \"%s\" with %v", query, args)
 	stmt, err := tx.Prepare(query)
 	defer closeStmt(stmt)

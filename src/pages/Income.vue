@@ -81,7 +81,7 @@ function reload() {
                                     class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                     Name
                                 </th>
-                                <th
+                                <th v-if="router.role === 'admin'"
                                     class="p-4 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-400">
                                     Actions
                                 </th>
@@ -95,7 +95,8 @@ function reload() {
                                 <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     {{ income.nm }}
                                 </td>
-                                <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                <td v-if="router.role === 'admin'"
+                                    class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                     <DelIncome @onClose="reload" :income />
                                 </td>
                             </tr>
