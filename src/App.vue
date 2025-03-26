@@ -9,6 +9,7 @@ import Roles from './pages/Roles.vue'
 import Menus from './pages/Menus.vue'
 import Wallets from './pages/Wallets.vue'
 import Income from './pages/Income.vue'
+import Expense from './pages/Expense.vue'
 
 const router = useRouter()
 </script>
@@ -22,4 +23,5 @@ const router = useRouter()
   <Menus v-if="router.path === '/master/menus'" />
   <Wallets v-if="router.path === '/master/wallets'" />
   <Income v-if="router.path === '/master/incomes'" />
+  <Expense v-if="router.path === '/master/expenses'" />
 </template>
