@@ -1,8 +1,8 @@
-package handler
+package wallets
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"track/lib"
 	"track/lib/db"
@@ -16,20 +16,15 @@ import (
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer lib.DefaultError(w)
 	if r.Method == "GET" {
-		if !session.ValidationRole(w, r, []string{"admin"}) {
+		if !session.ValidationRole(w, r, []string{"admin", "fin"}) {
 			return
 		}
 		getting(w)
 	} else if r.Method == "POST" {
-		if !session.ValidationRole(w, r, []string{"admin"}) {
+		if !session.ValidationRole(w, r, []string{"admin", "fin"}) {
 			return
 		}
 		posting(w, r)
-	} else if r.Method == "PUT" {
-		if !session.ValidationRole(w, r, []string{"admin"}) {
-			return
-		}
-		putting(w, r)
 	} else if r.Method == "DELETE" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
@@ -56,9 +51,9 @@ func deleting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	id1 := body["id"].(float64)
-	id := uint64(id1)
-	if err = repo.DelMenu(tx, id); err != nil {
+	id := body["id"].(float64)
+	err = repo.DelWallet(tx, uint64(id))
+	if err != nil {
 		panic(err)
 	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
@@ -75,12 +70,12 @@ func validationDel(body map[string]any) {
 	}
 }
 
-func putting(w http.ResponseWriter, r *http.Request) {
+func posting(w http.ResponseWriter, r *http.Request) {
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		panic(err)
 	}
-	menu := repo.MapToMenu(body)
+	validationPost(body)
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -91,36 +86,27 @@ func putting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Menu", menu)
-	err = repo.EditMenu(tx, menu, w)
+	err = repo.AddWallet(tx, repo.FromMapToWallet(body))
 	if err != nil {
 		panic(err)
 	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
-func posting(w http.ResponseWriter, r *http.Request) {
-	var body map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		panic(err)
+func validationPost(body map[string]any) {
+	keys := mapsutils.KeysOfMap(body)
+	for _, k := range []string{"nm", "balance"} {
+		if !arrayutils.Contains(keys, k) {
+			panic(fmt.Sprintf("bad: %s is required", k))
+		}
 	}
-	menu := repo.MapToMenu(body)
-	db, err := db.DbConn()
-	defer lib.CloseDb(w, db)
-	if err != nil {
-		panic(err)
+	nm, balance := body["nm"].(string), body["balance"].(float64)
+	if nm == "" {
+		panic("bad: nm is required")
 	}
-	tx, err := db.Begin()
-	defer lib.TxClose(tx, w)
-	if err != nil {
-		panic(err)
+	if balance < 0 {
+		panic("bad: balance must be positive or zero")
 	}
-	log.Println("Menu", menu)
-	err = repo.AddMenu(tx, menu, w)
-	if err != nil {
-		panic(err)
-	}
-	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
 func getting(w http.ResponseWriter) {
@@ -134,9 +120,9 @@ func getting(w http.ResponseWriter) {
 	if err != nil {
 		panic(err)
 	}
-	menus, err := repo.AllMenus(tx)
+	wallets, err := repo.AllWallet(tx)
 	if err != nil {
 		panic(err)
 	}
-	lib.SendJson(map[string]any{"msg": "Success", "menus": menus}, w)
+	lib.SendJson(map[string]any{"msg": "Success", "wallets": wallets}, w)
 }

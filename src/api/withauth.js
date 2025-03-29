@@ -2,7 +2,8 @@ export const logout = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/logout', { method: 'GET', headers })
+    headers.set('ai-path', '/logout')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     let resHeader = res.headers
     const body2 = await res.json()
@@ -15,7 +16,8 @@ export const authed = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed', { method: 'GET', headers })
+    headers.set('ai-path', '/authed')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -37,7 +39,8 @@ export const refreshToken = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('refreshToken')}`)
-    const res = await fetch('/api/authed/refresh', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/refresh')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     let resHeader = res.headers
     const body2 = await res.json()

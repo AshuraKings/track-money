@@ -4,7 +4,8 @@ export const getUsers = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/users', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/users')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -26,7 +27,8 @@ export const delUser = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/users', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/users')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -48,7 +50,8 @@ export const delRole = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/roles', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/roles')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -70,7 +73,8 @@ export const delMenu = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/menus', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/menus')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -92,7 +96,8 @@ export const editUser = async (body = { name: '', username: '', id: 0, role: 0 }
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/users', { method: 'PUT', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/users')
+    const res = await fetch('/api', { method: 'PUT', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -114,7 +119,8 @@ export const addUser = async (body = { name: '', username: '', password: '', rol
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/users', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/users')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -136,7 +142,8 @@ export const editRole = async (body = { name: '', id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/roles', { method: 'PUT', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/roles')
+    const res = await fetch('/api', { method: 'PUT', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -158,7 +165,8 @@ export const addRole = async (body = { name: '' }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/roles', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/roles')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -180,7 +188,8 @@ export const editMenus = async (body = { label: '', createdAt: "2025-03-14T21:55
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/menus', { method: 'PUT', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/menus')
+    const res = await fetch('/api', { method: 'PUT', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -202,7 +211,8 @@ export const addMenus = async (body = { label: '', createdAt: "2025-03-14T21:55:
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/menus', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/menus')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -224,7 +234,8 @@ export const getMenus = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/menus', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/menus')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -246,7 +257,8 @@ export const getRoles = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/roles', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/roles')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -268,7 +280,8 @@ export const getRoleMenus = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/roles/menus?id=' + body.id, { method: 'GET', headers })
+    headers.set('ai-path', '/authed/roles/menus')
+    const res = await fetch('/api?id=' + body.id, { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -290,8 +303,8 @@ export const addRoleMenus = async (body = { roleId: 0, menus: [] }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    console.log(body)
-    const res = await fetch('/api/authed/roles/menus', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/roles/menus')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -313,7 +326,8 @@ export const getWallets = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/wallets', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/wallets')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -335,7 +349,8 @@ export const addWallet = async (body = { nm: '', balance: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/wallets', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/wallets')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -357,7 +372,8 @@ export const delWallet = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/wallets', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/wallets')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -379,7 +395,8 @@ export const getIncomes = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/incomes', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/incomes')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -402,7 +419,8 @@ export const addIncome = async (body = { nm: '' }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/incomes', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/incomes')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -424,7 +442,8 @@ export const delIncome = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/incomes', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/incomes')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -446,7 +465,8 @@ export const getExpenses = async () => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/expenses', { method: 'GET', headers })
+    headers.set('ai-path', '/authed/expenses')
+    const res = await fetch('/api', { method: 'GET', headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -469,7 +489,8 @@ export const addExpenses = async (body = { nm: '' }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/expenses', { method: 'POST', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/expenses')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {
@@ -491,7 +512,8 @@ export const delExpenses = async (body = { id: 0 }) => {
     let headers = new Headers()
     headers.set('Content-Type', 'application/json')
     headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
-    const res = await fetch('/api/authed/expenses', { method: 'DELETE', body: JSON.stringify(body), headers })
+    headers.set('ai-path', '/authed/expenses')
+    const res = await fetch('/api', { method: 'DELETE', body: JSON.stringify(body), headers })
     const status = res.status
     const body2 = await res.json()
     if (body2.msg === 'Token is expired') {

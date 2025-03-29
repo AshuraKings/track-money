@@ -115,6 +115,7 @@ CREATE TABLE IF NOT EXISTS transaksi(
     to_wallet_id BIGINT REFERENCES wallets(id),
     income_id BIGINT REFERENCES incomes(id),
     expenses_id BIGINT REFERENCES expenses(id),
+    doer_id BIGINT NOT NULL REFERENCES users(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP,
     updated_at TIMESTAMP

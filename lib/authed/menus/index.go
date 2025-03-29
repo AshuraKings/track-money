@@ -1,7 +1,8 @@
-package handler
+package menus
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"track/lib"
 	"track/lib/db"
@@ -15,15 +16,20 @@ import (
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer lib.DefaultError(w)
 	if r.Method == "GET" {
-		if !session.ValidationRole(w, r, []string{"admin", "fin"}) {
+		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
 		getting(w)
 	} else if r.Method == "POST" {
-		if !session.ValidationRole(w, r, []string{"admin", "fin"}) {
+		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
 		}
 		posting(w, r)
+	} else if r.Method == "PUT" {
+		if !session.ValidationRole(w, r, []string{"admin"}) {
+			return
+		}
+		putting(w, r)
 	} else if r.Method == "DELETE" {
 		if !session.ValidationRole(w, r, []string{"admin"}) {
 			return
@@ -50,9 +56,9 @@ func deleting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	id := body["id"].(float64)
-	err = repo.DelExpense(tx, uint64(id))
-	if err != nil {
+	id1 := body["id"].(float64)
+	id := uint64(id1)
+	if err = repo.DelMenu(tx, id); err != nil {
 		panic(err)
 	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
@@ -69,12 +75,12 @@ func validationDel(body map[string]any) {
 	}
 }
 
-func posting(w http.ResponseWriter, r *http.Request) {
+func putting(w http.ResponseWriter, r *http.Request) {
 	var body map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		panic(err)
 	}
-	validationPost(body)
+	menu := repo.MapToMenu(body)
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -85,23 +91,36 @@ func posting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	nm := body["nm"].(string)
-	err = repo.AddExpense(tx, nm)
+	log.Println("Menu", menu)
+	err = repo.EditMenu(tx, menu, w)
 	if err != nil {
 		panic(err)
 	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
-func validationPost(body map[string]any) {
-	keys := mapsutils.KeysOfMap(body)
-	if !arrayutils.Contains(keys, "nm") {
-		panic("bad: nm is required")
+func posting(w http.ResponseWriter, r *http.Request) {
+	var body map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		panic(err)
 	}
-	nm := body["nm"].(string)
-	if nm == "" {
-		panic("bad: nm is required")
+	menu := repo.MapToMenu(body)
+	db, err := db.DbConn()
+	defer lib.CloseDb(w, db)
+	if err != nil {
+		panic(err)
 	}
+	tx, err := db.Begin()
+	defer lib.TxClose(tx, w)
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Menu", menu)
+	err = repo.AddMenu(tx, menu, w)
+	if err != nil {
+		panic(err)
+	}
+	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
 
 func getting(w http.ResponseWriter) {
@@ -115,9 +134,9 @@ func getting(w http.ResponseWriter) {
 	if err != nil {
 		panic(err)
 	}
-	expenses, err := repo.AllExpenses(tx)
+	menus, err := repo.AllMenus(tx)
 	if err != nil {
 		panic(err)
 	}
-	lib.SendJson(map[string]any{"msg": "Success", "expenses": expenses}, w)
+	lib.SendJson(map[string]any{"msg": "Success", "menus": menus}, w)
 }

@@ -1,4 +1,4 @@
-package handler
+package refresh
 
 import (
 	"net/http"

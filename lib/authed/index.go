@@ -1,4 +1,4 @@
-package handler
+package authed
 
 import (
 	"net/http"

@@ -1,8 +1,7 @@
-package handler
+package expenses
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"track/lib"
 	"track/lib/db"
@@ -52,7 +51,7 @@ func deleting(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	id := body["id"].(float64)
-	err = repo.DelWallet(tx, uint64(id))
+	err = repo.DelExpense(tx, uint64(id))
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +85,8 @@ func posting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	err = repo.AddWallet(tx, repo.FromMapToWallet(body))
+	nm := body["nm"].(string)
+	err = repo.AddExpense(tx, nm)
 	if err != nil {
 		panic(err)
 	}
@@ -95,17 +95,12 @@ func posting(w http.ResponseWriter, r *http.Request) {
 
 func validationPost(body map[string]any) {
 	keys := mapsutils.KeysOfMap(body)
-	for _, k := range []string{"nm", "balance"} {
-		if !arrayutils.Contains(keys, k) {
-			panic(fmt.Sprintf("bad: %s is required", k))
-		}
-	}
-	nm, balance := body["nm"].(string), body["balance"].(float64)
-	if nm == "" {
+	if !arrayutils.Contains(keys, "nm") {
 		panic("bad: nm is required")
 	}
-	if balance < 0 {
-		panic("bad: balance must be positive or zero")
+	nm := body["nm"].(string)
+	if nm == "" {
+		panic("bad: nm is required")
 	}
 }
 
@@ -120,9 +115,9 @@ func getting(w http.ResponseWriter) {
 	if err != nil {
 		panic(err)
 	}
-	wallets, err := repo.AllWallet(tx)
+	expenses, err := repo.AllExpenses(tx)
 	if err != nil {
 		panic(err)
 	}
-	lib.SendJson(map[string]any{"msg": "Success", "wallets": wallets}, w)
+	lib.SendJson(map[string]any{"msg": "Success", "expenses": expenses}, w)
 }
