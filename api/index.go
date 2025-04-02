@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"track/lib"
 	"track/lib/authed"
 	"track/lib/authed/expenses"
@@ -24,6 +25,7 @@ import (
 
 func Handler(w http.ResponseWriter, r *http.Request) {
 	defer lib.DefaultError(w)
+	os.Setenv("TZ", "Asia/Jakarta")
 	header := r.Header
 	if header.Get("ai-path") != "" {
 		myPath := header.Get("ai-path")

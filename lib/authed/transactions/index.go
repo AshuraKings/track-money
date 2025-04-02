@@ -7,7 +7,11 @@ import (
 	"time"
 	"track/lib"
 	"track/lib/db"
+	"track/lib/repo"
 	"track/lib/session"
+
+	arrayutils "github.com/AchmadRifai/array-utils"
+	mapsutils "github.com/AchmadRifai/maps-utils"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +38,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 func getting(w http.ResponseWriter, r *http.Request) {
 	validationGet(r)
+	query := lib.QueryToMap(r.URL.Query())
 	db, err := db.DbConn()
 	defer lib.CloseDb(w, db)
 	if err != nil {
@@ -44,8 +49,40 @@ func getting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	query := lib.QueryToMap(r.URL.Query())
-	lib.SendJson(map[string]any{"msg": "Success", "page": query["page"], "limit": query["limit"]}, w)
+	where := mapsutils.Map(query, mapConvert1)
+	transaksies, err := repo.AllTransaksies(tx, where)
+	if err != nil {
+		panic(err)
+	}
+	count, err := repo.CountTransaksies(tx, where)
+	if err != nil {
+		panic(err)
+	}
+	lib.SendJson(map[string]any{
+		"msg":         "Success",
+		"page":        query["page"],
+		"limit":       query["limit"],
+		"transaksies": transaksies,
+		"count":       count,
+	}, w)
+}
+
+func mapConvert1(v, k string) any {
+	if arrayutils.Contains([]string{"limit", "page"}, k) {
+		r, err := strconv.Atoi(v)
+		if err != nil {
+			panic(err)
+		}
+		return r
+	}
+	if arrayutils.Contains([]string{"start", "end"}, k) {
+		r, err := time.Parse("2006-01-02", v)
+		if err != nil {
+			panic(err)
+		}
+		return r
+	}
+	return v
 }
 
 func validationGet(r *http.Request) {

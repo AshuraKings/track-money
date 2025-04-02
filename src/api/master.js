@@ -530,3 +530,50 @@ export const delExpenses = async (body = { id: 0 }) => {
     resHeader.forEach((v, k) => h[k] = v)
     return { headers: h, body: body2, status }
 }
+
+export const getTransaksies = async (body = { page: 0, limit: 0 }) => {
+    let headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
+    headers.set('ai-path', '/authed/transactions')
+    const query = Object.keys(body).map(k => `${k}=${body[k]}`).join('&')
+    const res = await fetch('/api?' + query, { method: 'GET', headers })
+    const status = res.status
+    const body2 = await res.json()
+    if (body2.msg === 'Token is expired') {
+        const r = await refreshToken()
+        const { headers, status } = r
+        if (status >= 200 && status < 300) {
+            localStorage.setItem('refreshToken', headers.refreshtoken)
+            localStorage.setItem('sessionToken', headers.sessiontoken)
+            return await getTransaksies(body)
+        }
+    }
+    let resHeader = res.headers
+    const h = {}
+    resHeader.forEach((v, k) => h[k] = v)
+    return { headers: h, body: body2, status }
+}
+
+export const addTransaksies = async (body = { ket: '', date: '', amount: 0, admin: 0 }) => {
+    let headers = new Headers()
+    headers.set('Content-Type', 'application/json')
+    headers.set('Authorization', `Bearer ${localStorage.getItem('sessionToken')}`)
+    headers.set('ai-path', '/authed/transactions')
+    const res = await fetch('/api', { method: 'POST', body: JSON.stringify(body), headers })
+    const status = res.status
+    const body2 = await res.json()
+    if (body2.msg === 'Token is expired') {
+        const r = await refreshToken()
+        const { headers, status } = r
+        if (status >= 200 && status < 300) {
+            localStorage.setItem('refreshToken', headers.refreshtoken)
+            localStorage.setItem('sessionToken', headers.sessiontoken)
+            return await addTransaksies(body)
+        }
+    }
+    let resHeader = res.headers
+    const h = {}
+    resHeader.forEach((v, k) => h[k] = v)
+    return { headers: h, body: body2, status }
+}
