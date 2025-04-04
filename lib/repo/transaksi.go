@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"math/rand"
 	"time"
 	"track/lib/fieldbinding"
 
@@ -22,6 +23,43 @@ type Transaksi struct {
 	ThisIncome   *Income  `json:"income"`
 	ThisExpenses *Expense `json:"expense"`
 	Doer         User     `json:"doer"`
+}
+
+func AddTransksi(tx *sql.Tx, body map[string]any) error {
+	log.Printf("Value %v", body)
+	query, args, cols := "MERGE INTO transaksi t USING (SELECT ", []any{}, []string{}
+	kode := body["kode"].(string)
+	args = append(args, kode)
+	query += fmt.Sprintf("$%d kode,", len(args))
+	cols = append(cols, "kode")
+	query += fmt.Sprintf("$%d ket,", len(args)+1)
+	args = append(args, body["ket"].(string))
+	cols = append(cols, "ket")
+	query += fmt.Sprintf("$%d amount,", len(args)+1)
+	args = append(args, body["amount"].(float64))
+	cols = append(cols, "amount")
+	args = append(args, body["date"].(time.Time))
+	query += fmt.Sprintf("$%d trx_date,", len(args))
+	cols = append(cols, "trx_date")
+	args = append(args, body["admin"].(float64))
+	query += fmt.Sprintf("$%d admin_fee,", len(args))
+	cols = append(cols, "admin_fee")
+	return stmtExec(tx, query, args...)
+}
+
+func GenKodeTransaksi() string {
+	prefix, additional := time.Now().Format("0601"), randomString(16)
+	return prefix + additional
+}
+
+func randomString(length int) string {
+	var letters = []rune("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	randomizer := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+	b := make([]rune, length)
+	for i := range b {
+		b[i] = letters[randomizer.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 func CountTransaksies(tx *sql.Tx, body map[string]any) (uint64, error) {
