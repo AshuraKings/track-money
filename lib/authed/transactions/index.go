@@ -60,8 +60,11 @@ func posting(w http.ResponseWriter, r *http.Request) {
 	}
 	body["date"] = date
 	claims := session.ParseToken(r)
-	sub := claims["sub"].(int64)
-	body["doer"] = sub
+	sub := claims["sub"].(string)
+	body["doer"], err = strconv.Atoi(sub)
+	if err != nil {
+		panic(err)
+	}
 	if err = repo.AddTransksi(tx, body); err != nil {
 		panic(err)
 	}

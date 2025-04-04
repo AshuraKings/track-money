@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 	"track/lib/fieldbinding"
 
@@ -27,6 +29,7 @@ type Transaksi struct {
 
 func AddTransksi(tx *sql.Tx, body map[string]any) error {
 	log.Printf("Value %v", body)
+	keys := mapsutils.KeysOfMap(body)
 	query, args, cols := "MERGE INTO transaksi t USING (SELECT ", []any{}, []string{}
 	kode := body["kode"].(string)
 	args = append(args, kode)
@@ -35,15 +38,41 @@ func AddTransksi(tx *sql.Tx, body map[string]any) error {
 	query += fmt.Sprintf("$%d ket,", len(args)+1)
 	args = append(args, body["ket"].(string))
 	cols = append(cols, "ket")
-	query += fmt.Sprintf("$%d amount,", len(args)+1)
+	query += fmt.Sprintf("$%d::numeric amount,", len(args)+1)
 	args = append(args, body["amount"].(float64))
 	cols = append(cols, "amount")
 	args = append(args, body["date"].(time.Time))
-	query += fmt.Sprintf("$%d trx_date,", len(args))
+	query += fmt.Sprintf("$%d::date trx_date,", len(args))
 	cols = append(cols, "trx_date")
 	args = append(args, body["admin"].(float64))
-	query += fmt.Sprintf("$%d admin_fee,", len(args))
+	query += fmt.Sprintf("$%d::numeric admin_fee,", len(args))
 	cols = append(cols, "admin_fee")
+	if arrayutils.Contains(keys, "fw") {
+		args = append(args, body["fw"].(float64))
+		query += fmt.Sprintf("$%d::bigint from_wallet_id,", len(args))
+		cols = append(cols, "from_wallet_id")
+	}
+	if arrayutils.Contains(keys, "income") {
+		args = append(args, body["income"].(float64))
+		query += fmt.Sprintf("$%d::bigint income_id,", len(args))
+		cols = append(cols, "income_id")
+	}
+	if arrayutils.Contains(keys, "tw") {
+		args = append(args, body["tw"].(float64))
+		query += fmt.Sprintf("$%d::bigint to_wallet_id,", len(args))
+		cols = append(cols, "to_wallet_id")
+	}
+	if arrayutils.Contains(keys, "expense") {
+		args = append(args, body["expense"].(float64))
+		query += fmt.Sprintf("$%d::bigint expenses_id,", len(args))
+		cols = append(cols, "expenses_id")
+	}
+	args = append(args, body["doer"].(int))
+	query += fmt.Sprintf("$%d::bigint doer_id)", len(args))
+	cols = append(cols, "doer_id")
+	query += " AS n ON t.kode=n.kode WHEN NOT MATCHED THEN INSERT"
+	query += fmt.Sprintf("(%s) ", strings.Join(cols, ","))
+	query += fmt.Sprintf("VALUES(%s)", strings.Join(arrayutils.Map(cols, func(v string, _ int) string { return "n." + v }), ","))
 	return stmtExec(tx, query, args...)
 }
 
@@ -88,8 +117,8 @@ func CountTransaksies(tx *sql.Tx, body map[string]any) (uint64, error) {
 
 func AllTransaksies(tx *sql.Tx, body map[string]any) ([]Transaksi, error) {
 	keys := mapsutils.KeysOfMap(body)
-	query, args := "SELECT t.kode,t.ket,t.amount,t.trx_date,t.admin_fee,t.from_wallet_id,fw.nm fw_nm,fw.balance fw_balance,", []any{}
-	query += "t.to_wallet_id,tw.nm tw_nm,tw.balance tw_balance,t.income_id,i.nm i_nm,t.expenses_id,e.nm e_nm,t.doer_id,u.nm u_nm,u.username u_username,"
+	query, args := "SELECT t.kode,t.ket,t.amount::text amount,t.trx_date,t.admin_fee::text admin_fee,t.from_wallet_id,fw.nm fw_nm,fw.balance::text fw_balance,", []any{}
+	query += "t.to_wallet_id,tw.nm tw_nm,tw.balance::text tw_balance,t.income_id,i.nm i_nm,t.expenses_id,e.nm e_nm,t.doer_id,u.nm u_nm,u.username u_username,"
 	query += "u.role_id u_role_id,u.created_at u_created_at,u.updated_at u_updated_at "
 	query += "FROM transaksi t LEFT JOIN wallets fw ON t.from_wallet_id=fw.id LEFT JOIN wallets tw ON t.to_wallet_id=tw.id "
 	query += "LEFT JOIN incomes i ON i.id=t.income_id LEFT JOIN expenses e ON e.id=t.expenses_id LEFT JOIN users u ON u.id=t.doer_id "
@@ -156,8 +185,17 @@ func mapToTransaksi(v map[string]any, _ int) Transaksi {
 	t := Transaksi{}
 	t.Kode = v["kode"].(string)
 	t.Ket = v["ket"].(string)
-	t.AdminFee = v["admin_fee"].(float64)
-	t.Amount = v["amount"].(float64)
+	adminFee1 := v["admin_fee"].(string)
+	adminFee, err := strconv.ParseFloat(adminFee1, 64)
+	t.AdminFee = adminFee
+	if err != nil {
+		panic(err)
+	}
+	amount1 := v["amount"].(string)
+	t.Amount, err = strconv.ParseFloat(amount1, 64)
+	if err != nil {
+		panic(err)
+	}
 	date := v["trx_date"].(time.Time)
 	t.Date = date.Format("2006-01-02")
 	id, roleId := v["doer_id"].(int64), v["u_role_id"].(int64)
@@ -189,7 +227,11 @@ func mapToTransaksi(v map[string]any, _ int) Transaksi {
 		id := v["from_wallet_id"].(int64)
 		fw.Id = uint64(id)
 		fw.Nm = v["fw_nm"].(string)
-		fw.Balance = v["fw_balance"].(float64)
+		balance := v["fw_balance"].(string)
+		fw.Balance, err = strconv.ParseFloat(balance, 64)
+		if err != nil {
+			panic(err)
+		}
 		t.FromWallet = &fw
 	}
 	if v["to_wallet_id"] != nil {
@@ -197,7 +239,11 @@ func mapToTransaksi(v map[string]any, _ int) Transaksi {
 		id := v["to_wallet_id"].(int64)
 		fw.Id = uint64(id)
 		fw.Nm = v["tw_nm"].(string)
-		fw.Balance = v["tw_balance"].(float64)
+		balance := v["tw_balance"].(string)
+		fw.Balance, err = strconv.ParseFloat(balance, 64)
+		if err != nil {
+			panic(err)
+		}
 		t.ToWallet = &fw
 	}
 	return t

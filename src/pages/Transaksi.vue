@@ -145,10 +145,10 @@ function reload() {
                     {{ t.date }}
                   </td>
                   <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {{ t.ket }}
+                    {{ t.income ? `${t.income.nm} (Pendapatan)` : `${t.fromWallet.nm} (Kas)` }}
                   </td>
                   <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {{ t.ket }}
+                    {{ t.expense ? `${t.expense.nm} (Pengeluaran)` : `${t.toWallet.nm} (Kas)` }}
                   </td>
                   <td class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
                     {{ t.amount }}
