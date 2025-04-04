@@ -31,6 +31,12 @@ func DelWallet(tx *sql.Tx, id uint64) error {
 	return nil
 }
 
+func UpdateWalletBalance(tx *sql.Tx, id uint64, change float64) error {
+	query, args := "MERGE INTO wallets w USING (SELECT $1::bigint id,$2::numeric change) AS c ON w.id=c.id AND w.deleted_at IS NULL ", []any{id, change}
+	query += "WHEN MATCHED THEN UPDATE SET updated_at=now(),balance=balance+c.change"
+	return stmtExec(tx, query, args...)
+}
+
 func EditWallet(tx *sql.Tx, id uint64, mapChange map[string]any) error {
 	keys, constKeys := mapsutils.KeysOfMap(mapChange), []string{"nm", "balanceUp", "balanceDown"}
 	if len(keys) < 1 || arrayutils.AllOf(keys, func(v string, _ int) bool { return !arrayutils.Contains(constKeys, v) }) {
@@ -82,6 +88,11 @@ func AddWallet(tx *sql.Tx, wallet Wallet) error {
 		return err
 	}
 	return nil
+}
+
+func GetWallets(tx *sql.Tx, id uint64) ([]Wallet, error) {
+	query, args := "SELECT id,nm,balance FROM wallets WHERE deleted_at IS NULL AND id=$1", []any{id}
+	return selectQueryWallets(tx, query, args...)
 }
 
 func AllWallet(tx *sql.Tx) ([]Wallet, error) {

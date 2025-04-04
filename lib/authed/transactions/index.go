@@ -43,16 +43,6 @@ func posting(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	validationPost(body)
-	db, err := db.DbConn()
-	defer lib.CloseDb(w, db)
-	if err != nil {
-		panic(err)
-	}
-	tx, err := db.Begin()
-	defer lib.TxClose(tx, w)
-	if err != nil {
-		panic(err)
-	}
 	body["kode"] = repo.GenKodeTransaksi()
 	date, err := time.Parse("2006-01-02", body["date"].(string))
 	if err != nil {
@@ -65,8 +55,54 @@ func posting(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
+	keys, amount, admin := mapsutils.KeysOfMap(body), body["amount"].(float64), body["admin"].(float64)
+	db, err := db.DbConn()
+	defer lib.CloseDb(w, db)
+	if err != nil {
+		panic(err)
+	}
+	tx, err := db.Begin()
+	defer lib.TxClose(tx, w)
+	if err != nil {
+		panic(err)
+	}
 	if err = repo.AddTransksi(tx, body); err != nil {
 		panic(err)
+	}
+	if arrayutils.Contains(keys, "fw") {
+		fw, change := body["fw"].(float64), amount-admin
+		if err = repo.UpdateWalletBalance(tx, uint64(fw), change*-1); err != nil {
+			panic(err)
+		}
+		wallets, err := repo.GetWallets(tx, uint64(fw))
+		if err != nil {
+			panic(err)
+		}
+		if len(wallets) == 0 {
+			panic(fmt.Sprintf("wallet %f not found", fw))
+		}
+		wallet := wallets[0]
+		if wallet.Balance <= 0 {
+			panic(fmt.Sprintf("wallet %s insufficient balance", wallet.Nm))
+		}
+	}
+	if arrayutils.Contains(keys, "tw") {
+		tw, change := body["tw"].(float64), amount-admin
+		if err = repo.UpdateWalletBalance(tx, uint64(tw), change); err != nil {
+			panic(err)
+		}
+		wallets, err := repo.GetWallets(tx, uint64(tw))
+		if err != nil {
+			panic(err)
+		}
+		if len(wallets) == 0 {
+			panic(fmt.Sprintf("wallet %f not found", tw))
+		}
+		wallet := wallets[0]
+		if wallet.Balance <= 0 {
+			panic(fmt.Sprintf("wallet %s insufficient balance", wallet.Nm))
+		}
+
 	}
 	lib.SendJson(map[string]any{"msg": "Success"}, w)
 }
