@@ -6,6 +6,7 @@ import Pagination from '../components/Pagination.vue'
 import { getTransaksies } from '../api/master'
 import { authed } from '../api/withauth'
 import AddTrans from '../components/modals/AddTrans.vue'
+import DelTrans from '../components/modals/DelTrans.vue'
 
 const router = useRouter(), ket = ref(''), start = ref(''), end = ref(''), count = ref(100), page = ref(0), transaksies = ref([])
 const invalidSearch = computed(() => router.loading || (ket.value === '' && start.value === ''))
@@ -155,7 +156,7 @@ function reload() {
                 </td>
                 <td v-if="router.role === 'admin'"
                   class="p-4 text-base font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                  Actions
+                  <DelTrans @onClose="reload" :trans="t" />
                 </td>
               </tr>
             </tbody>

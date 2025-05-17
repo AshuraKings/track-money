@@ -12,6 +12,7 @@ import Income from './pages/Income.vue'
 import Expense from './pages/Expense.vue'
 import Transaksi from './pages/Transaksi.vue'
 import AuthenticatedLayout from './layouts/AuthenticatedLayout.vue'
+import Monthly from './pages/Monthly.vue'
 
 const router = useRouter()
 </script>
@@ -28,5 +29,6 @@ const router = useRouter()
     <Income v-if="router.path === '/master/incomes'" />
     <Expense v-if="router.path === '/master/expenses'" />
     <Transaksi v-if="router.path === '/master/transactions'" />
+    <Monthly v-if="router.path === '/report/monthly'" />
   </AuthenticatedLayout>
 </template>
