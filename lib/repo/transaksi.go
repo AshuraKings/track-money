@@ -115,6 +115,24 @@ func CountTransaksies(tx *sql.Tx, body map[string]any) (uint64, error) {
 	return selectCount(tx, query, args...)
 }
 
+func FirstDateTransaksi(tx *sql.Tx) (string, error) {
+	query, args := "SELECT MIN(t.trx_date) pertama FROM transaksi t", []any{}
+	log.Printf("Query \"%s\" with %v", query, args)
+	rows, err := tx.Query(query, args...)
+	defer closeRows(rows)
+	if err != nil {
+		return "", err
+	}
+	rowsMap, err := rowsToMap(rows)
+	if err != nil {
+		return "", err
+	}
+	if len(rowsMap) == 0 || rowsMap[0]["pertama"] == nil {
+		return time.Now().Format("2006-01-02"), nil
+	}
+	return rowsMap[0]["pertama"].(time.Time).Format("2006-01-02"), nil
+}
+
 func AllTransaksies(tx *sql.Tx, body map[string]any) ([]Transaksi, error) {
 	keys := mapsutils.KeysOfMap(body)
 	query, args := "SELECT t.kode,t.ket,t.amount::text amount,t.trx_date,t.admin_fee::text admin_fee,t.from_wallet_id,fw.nm fw_nm,fw.balance::text fw_balance,", []any{}

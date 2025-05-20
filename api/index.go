@@ -10,6 +10,7 @@ import (
 	"track/lib/authed/expenses"
 	"track/lib/authed/incomes"
 	menus1 "track/lib/authed/menus"
+	"track/lib/authed/monthly"
 	"track/lib/authed/refresh"
 	"track/lib/authed/roles"
 	"track/lib/authed/roles/menus"
@@ -32,6 +33,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("[%s] /api%s", r.Method, myPath)
 		if myPath == "/authed" {
 			authed.Handler(w, r)
+		} else if myPath == "/authed/monthly" {
+			monthly.Handler(w, r)
 		} else if myPath == "/authed/wallets" {
 			wallets.Handler(w, r)
 		} else if myPath == "/authed/users" {
